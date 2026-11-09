@@ -298,6 +298,15 @@ function PoolSheet({
 // 模型配置抽屉（新建 / 编辑共用同一套表单）
 // ─────────────────────────────────────────────────────────────────────────────
 
+// 首次新建 LLM 配置时的预置值（七猫内部统一走 Token Hub 中转）。
+// 新建抽屉打开即填好名称/格式/模型/地址，只有 API Key 需要粘一次。
+const NEW_PROFILE = {
+  name: "奥飞tokenzz",
+  format: "openai" as const,
+  model: "deepseek-flash",
+  baseUrl: "https://apitokenzz.xyz/v1",
+};
+
 function ProfileSheet({
   profile,
   open,
@@ -316,6 +325,7 @@ function ProfileSheet({
   const [baseUrl, setBaseUrl] = React.useState("");
   const [proxy, setProxy] = React.useState("");
   const [apiKey, setApiKey] = React.useState("");
+  const apiKeyRef = React.useRef<HTMLInputElement>(null);
   const [keyHint, setKeyHint] = React.useState("");
   const [rps, setRps] = React.useState("0");
   const [rpm, setRpm] = React.useState("0");
@@ -339,10 +349,16 @@ function ProfileSheet({
   // 就是一次干净的开始，不会留下上一个配置的残影。
   React.useEffect(() => {
     if (!open) return;
-    setName(profile?.name ?? "");
-    setFormat(profile?.format === "openai" || profile?.format === "openai-responses" ? profile.format : "anthropic");
-    setModel(profile?.model ?? "");
-    setBaseUrl(profile?.base_url ?? "");
+    setName(profile?.name ?? NEW_PROFILE.name);
+    setFormat(
+      profile
+        ? profile.format === "openai" || profile.format === "openai-responses"
+          ? profile.format
+          : "anthropic"
+        : NEW_PROFILE.format,
+    );
+    setModel(profile?.model ?? NEW_PROFILE.model);
+    setBaseUrl(profile?.base_url ?? NEW_PROFILE.baseUrl);
     setProxy(profile?.proxy ?? "");
     setRps(String(profile?.rate_per_second ?? 0));
     setRpm(String(profile?.rate_per_minute ?? 0));
@@ -360,6 +376,11 @@ function ProfileSheet({
     setKeyHint(profile?.api_key_hint ?? "");
     setModels([]);
     setModelsOpen(false);
+    // 新建时把焦点直接落在 API Key 上：其余字段已预填，粘 Key 即可保存
+    if (!profile) {
+      const t = window.setTimeout(() => apiKeyRef.current?.focus(), 120);
+      return () => window.clearTimeout(t);
+    }
   }, [open, profile]);
 
   const profileId = profile ? Number(profile.id) : undefined;
@@ -598,6 +619,7 @@ function ProfileSheet({
             <Label htmlFor="p-api-key">API Key</Label>
             <Input
               id="p-api-key"
+              ref={apiKeyRef}
               type="password"
               placeholder={keyHint ? `已设置（${keyHint}），留空保持不变` : "sk-…"}
               value={apiKey}
