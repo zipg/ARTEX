@@ -27,17 +27,18 @@ import (
 var version = "dev"
 
 const banner = `
-    _    ____ _____ _______  __
-   / \  |  _ \_   _| ____\ \/ /
-  / _ \ | |_) || | |  _|  \  /
- / ___ \|  _ < | | | |___ /  \
-/_/   \_\_| \_\|_| |_____/_/\_\
+   ██████╗ █████╗ ████████╗████████╗██╗   ██╗
+  ██╔════╝██╔══██╗╚══██╔══╝╚══██╔══╝╚██╗ ██╔╝
+  ██║     ███████║   ██║      ██║    ╚████╔╝
+  ██║     ██╔══██║   ██║      ██║     ╚██╔╝
+  ╚██████╗██║  ██║   ██║      ██║      ██║
+   ╚═════╝╚═╝  ╚═╝   ╚═╝      ╚═╝      ╚═╝
 `
 
 // printBanner writes the startup banner + version/runtime info to stdout.
 func printBanner(addr string) {
 	fmt.Print(banner)
-	fmt.Println("  AI 自主渗透测试系统")
+	fmt.Println("  Catty · 自主渗透测试平台（七猫内部版）")
 	fmt.Printf("  版本 %s  ·  %s/%s  ·  %s  ·  监听 %s\n\n",
 		version, runtime.GOOS, runtime.GOARCH, runtime.Version(), addr)
 }

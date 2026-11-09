@@ -83,10 +83,10 @@ func loadOrCreateJWTKey(keyDir, dataDir string) ([]byte, error) {
 	return buf, nil
 }
 
-// signJWT issues a 7-day HS256 token for user ARTEX.
+// signJWT issues a 7-day HS256 token for the admin user (Catty).
 func signJWT(key []byte) (string, error) {
 	return jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.RegisteredClaims{
-		Subject:   "ARTEX",
+		Subject:   "Catty",
 		ExpiresAt: jwt.NewNumericDate(time.Now().Add(jwtTTL)),
 		IssuedAt:  jwt.NewNumericDate(time.Now()),
 	}).SignedString(key)
@@ -259,6 +259,10 @@ func (s *Server) authChangePassword(w http.ResponseWriter, r *http.Request) {
 }
 
 // POST /api/auth/login — validates username/password and returns a JWT.
+// 品牌化：登录名由 ARTEX 改为 Catty。同时保留旧名 ARTEX 以兼容既有部署与已保存的密码记录
+// （密码哈希与用户名无关，保留旧名不会绕过任何校验）。
+func isAdminUsername(u string) bool { return u == "Catty" || u == "ARTEX" }
+
 func (s *Server) authLogin(w http.ResponseWriter, r *http.Request) {
 	pg := s.pg(w)
 	if pg == nil {
@@ -272,7 +276,7 @@ func (s *Server) authLogin(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, 400, "请求格式错误")
 		return
 	}
-	if req.Username != "ARTEX" {
+	if !isAdminUsername(req.Username) {
 		writeErr(w, 401, "用户名或密码错误")
 		return
 	}

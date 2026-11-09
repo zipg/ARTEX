@@ -42,6 +42,12 @@ Thumbs.db
 /artex.old
 /artex.failed
 /artex.upgrade.json
+/catty
+/catty.new
+/catty.new.sha256
+/catty.old
+/catty.failed
+/catty.upgrade.json
 /server/webui/dist/
 /dist/
 

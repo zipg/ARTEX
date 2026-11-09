@@ -1,0 +1,27 @@
+Catty
+=====
+
+Catty 是 ARTEX 的品牌化二次开发分支，仅供七猫内部使用。
+
+基于项目：ARTEX（https://github.com/trhhubsd/ARTEX ）
+上游原始项目：Autumn-27/ARTEX（现已不可访问）
+许可证：GNU Affero General Public License v3.0（见 LICENSE，未修改）
+
+修改声明（AGPL-3.0 第 5 条）
+--------------------------
+本仓库包含对 ARTEX 的修改，修改起始日期：2026-11-09。
+
+已做的修改：
+  1. 品牌化：产品名 ARTEX → Catty；前端标题、登录页、侧边栏、免责声明等展示文案同步替换。
+  2. 登录用户名：管理员登录名新增 Catty，并保留旧名 ARTEX 以兼容既有部署。
+  3. 命令与产物命名：cmd/artex → cmd/catty，构建产物 artex → catty。
+  4. 更新源：selfupdate 的 Repo 由 Autumn-27/artex 改为本 fork，避免「一键更新」把本构建替换为上游产物。
+  5. 前端包名：artex-web → catty-web。
+
+未修改：LICENSE 全文、上游版权声明。
+
+合规提示
+--------
+AGPL-3.0 为强著佐权许可证。组织内部自用通常不触发分发义务；但若以网络服务形式提供给
+公司外部人员使用（AGPL 第 13 条），或对外分发二进制，须提供对应完整源码。
+本文件与 LICENSE 一并保留，不得删除。

@@ -20,7 +20,7 @@ set -u
 
 cd "$(dirname "$0")" || exit 1
 
-BIN=./artex
+BIN=./catty
 [ -x "$BIN" ] || { echo "[artex] 找不到可执行文件 $BIN" >&2; exit 1; }
 
 RESTART_CODE=75

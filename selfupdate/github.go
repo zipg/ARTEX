@@ -12,7 +12,11 @@ import (
 
 // Repo 是发布源。写死而不是做成配置项：更新源可配等于给任何能改配置的人一条
 // 远程代码执行通道，对一个渗透测试平台来说这个口子开不得。
-const Repo = "Autumn-27/artex"
+//
+// 【二开必读】此处必须指向自己的 fork。否则页面上的「一键更新」会去拉上游
+// ARTEX 的 Release，把 Catty 的二进制替换成上游构建 —— 既丢品牌，也等于把
+// 供应链控制权交回上游（上游的 Docker 镜像已确认被投放过登录后门）。
+const Repo = "zipg/ARTEX"
 
 // latestURL 是 GitHub 的"最新正式版"接口。它会自动跳过 prerelease 和 draft。
 const latestURL = "https://api.github.com/repos/" + Repo + "/releases/latest"
