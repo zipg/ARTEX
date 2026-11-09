@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import { useRouter } from "next/navigation";
 
@@ -18,47 +18,100 @@ import { auth } from "@/lib/auth";
 const TERMS_COUNTDOWN_SECONDS = 5;
 
 // 登录页背景装饰用的"假终端"内容。纯展示：不含真实目标，全部为示意数据。
+// 终端日志用的本地时间格式 HH:MM:SS.mmm
+function fmtClock(ms: number) {
+  const d = new Date(ms);
+  const pad = (n: number, w = 2) => String(n).padStart(w, "0");
+  return `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}.${pad(d.getMilliseconds(), 3)}`;
+}
+
 const TERMINAL_LINES: { text: string; tone?: "dim" | "cmd" | "ok" | "warn" }[] = [
   { text: "$ catty version", tone: "cmd" },
-  { text: "catty 0.4.5-catty · darwin/arm64 · go1.26.4 · build 2026-11-09T06:12Z", tone: "dim" },
+  { text: "catty 0.4.8-catty · darwin/arm64 · go1.26.4", tone: "dim" },
   { text: "$ catty --init", tone: "cmd" },
-  { text: "[06:12:41.482] [config]  loaded ~/.catty/config.json (db, skill_dir, notify)", tone: "dim" },
-  { text: "[06:12:41.489] [pg]      pool ready min=2 max=13  postgres://catty@127.0.0.1:5432/artex", tone: "dim" },
-  { text: "[06:12:41.501] [migrate] schema up-to-date · 51 tables · rev=20261109_04", tone: "dim" },
-  { text: "[06:12:41.512] [auth]    jwt key loaded (HS256, ttl=168h, kid=5f2c)", tone: "dim" },
-  { text: "[06:12:41.520] [llm]     profile \"catty-default\" · openai-compatible · ctx=256k", tone: "dim" },
-  { text: "[06:12:41.534] [notify]  feishu webhook verified in 412ms", tone: "ok" },
-  { text: "[06:12:41.540] [traffic] recording proxy 127.0.0.1:8788 · ca=data/traffic/_ca/pki", tone: "dim" },
-  { text: "[06:12:41.551] [engine]  workers=3 planner=1 scheduler=depth-first", tone: "dim" },
-  { text: "[06:12:41.560] [ok]      listening on 127.0.0.1:8787", tone: "ok" },
+  { text: "[config]  loaded ~/.catty/config.json", tone: "dim" },
+  { text: "[pg]      pool ready min=2 max=13 → 127.0.0.1:5432/artex", tone: "dim" },
+  { text: "[migrate] schema up-to-date · 51 tables · rev=20261109_04", tone: "dim" },
+  { text: "[auth]    jwt key loaded · HS256 · ttl=168h · kid=5f2c", tone: "dim" },
+  { text: "[llm]     profile \"catty-default\" · openai-compatible · ctx=256k", tone: "dim" },
+  { text: "[notify]  feishu webhook verified 412ms", tone: "ok" },
+  { text: "[traffic] recording proxy 127.0.0.1:8788 · ca=data/traffic/_ca/pki", tone: "dim" },
+  { text: "[engine]  workers=3 · planner=1 · scheduler=depth-first", tone: "dim" },
+  { text: "[ok]      listening on 127.0.0.1:8787", tone: "ok" },
   { text: "", tone: "dim" },
   { text: "$ catty task new --name q3-web --scope 10.20.0.0/24 --goal \"obtain root\"", tone: "cmd" },
-  { text: "[06:13:02.114] [scope]   254 hosts · 0 exclusions · policy=strict", tone: "dim" },
-  { text: "[06:13:02.121] [guard]   out-of-scope confirmation: REQUIRED", tone: "warn" },
-  { text: "[06:13:03.902] [planner] round 1 · budget 24 intents · depth 1", tone: "dim" },
-  { text: "[06:13:04.001] [w#1]      intent 1  tcp-syn 10.20.0.0/24:22,80,443,8080", tone: "dim" },
-  { text: "[06:13:04.010] [w#2]      intent 2  passive subdomain enum (crt.sh, otx, chaos)", tone: "dim" },
-  { text: "[06:13:04.020] [w#3]      intent 3  http fingerprint · 41 live hosts", tone: "dim" },
-  { text: "[06:13:09.771] [masscan] 41/41 up · 68 open ports · 3.9s · pps=1200", tone: "dim" },
-  { text: "[06:13:11.203] [httpx]   10.20.0.31   nginx/1.24.0  [200] 1.2kB  title=\"Intranet\"", tone: "dim" },
-  { text: "[06:13:11.884] [httpx]   10.20.0.77   nginx/1.18.0  [401] 0.6kB  title=\"Admin\"", tone: "dim" },
-  { text: "[06:13:12.041] [w#1]      intent 1 done · facts=3 assets=41", tone: "ok" },
-  { text: "[06:13:30.512] [w#2]      crt.sh → 6 subs (2 internal-only)", tone: "dim" },
-  { text: "[06:13:31.008] [scope]    REJECT legacy.partner-cdn.example — not in allowlist", tone: "warn" },
-  { text: "[06:13:33.220] [w#3]      intent 3 done · tech: nginx, php/8.1, jquery/1.12", tone: "ok" },
-  { text: "[06:13:34.010] [planner] round 2 · intents=9 · depth=2", tone: "dim" },
-  { text: "[06:13:35.441] [w#1]      10.20.0.77 /admin → 302 /login.php  set-cookie=PHPSESSID", tone: "dim" },
-  { text: "[06:13:36.902] [w#1]      login.php  error-based probe → 500 (stack trace leaked)", tone: "dim" },
-  { text: "[06:13:38.114] [guard]    BLOCK destructive payload: DROP TABLE users", tone: "warn" },
-  { text: "[06:13:39.005] [w#2]      /api/v1/export?file=../../etc/passwd → 403 (filtered)", tone: "dim" },
-  { text: "[06:13:40.221] [finding]  #12 path traversal (blocked) severity=info", tone: "dim" },
-  { text: "[06:13:44.512] [llm]      round=2 in=18,442 out=1,203 cached=12,288 cost=$0.031", tone: "dim" },
-  { text: "[06:13:47.001] [w#3]      ssh banner 10.20.0.12  OpenSSH_8.2p1 Ubuntu-4ubuntu0.5", tone: "dim" },
-  { text: "[06:13:48.772] [finding]  #13 openssh 8.2 weak kex severity=low", tone: "dim" },
-  { text: "[06:14:01.004] [notify]   feishu → 2 findings pushed (412ms)", tone: "ok" },
-  { text: "[06:14:02.118] [planner]  round 3 · coverage=0.87 · converging", tone: "dim" },
-  { text: "[06:14:10.900] [engine]   task PAUSED by operator", tone: "warn" },
-  { text: "[06:14:10.901] [ok]       state persisted · 41 assets · 6 facts · 2 findings", tone: "ok" },
+  { text: "[scope]   254 hosts · 0 exclusions · policy=strict", tone: "dim" },
+  { text: "[guard]   out-of-scope confirmation: REQUIRED", tone: "warn" },
+  { text: "[planner] round 1 · budget 24 intents · depth 1", tone: "dim" },
+  { text: "[w#1]     intent 1  tcp-syn 22,80,443,8080,8443", tone: "dim" },
+  { text: "[w#2]     intent 2  passive dns (crt.sh / otx / chaos)", tone: "dim" },
+  { text: "[w#3]     intent 3  http fingerprint", tone: "dim" },
+  { text: "[masscan] rate=1200pps · 254 hosts", tone: "dim" },
+  { text: "[masscan] 41/41 up · 68 open ports · 3.9s", tone: "ok" },
+  { text: "[httpx]   10.20.0.31  nginx/1.24.0  [200] 1.2kB  \"Intranet\"", tone: "dim" },
+  { text: "[httpx]   10.20.0.77  nginx/1.18.0  [401] 0.6kB  \"Admin\"", tone: "dim" },
+  { text: "[httpx]   10.20.0.12  OpenSSH_8.2p1 Ubuntu-4ubuntu0.5", tone: "dim" },
+  { text: "[w#1]     intent 1 done · facts=3 assets=41", tone: "ok" },
+  { text: "[w#2]     crt.sh → 6 subs (2 internal-only)", tone: "dim" },
+  { text: "[scope]   REJECT legacy.partner-cdn.example — not in allowlist", tone: "warn" },
+  { text: "[w#3]     intent 3 done · tech: nginx, php/8.1, jquery/1.12", tone: "ok" },
+  { text: "[planner] round 2 · intents=9 · depth=2", tone: "dim" },
+  { text: "[w#1]     GET /admin → 302 /login.php  set-cookie=PHPSESSID", tone: "dim" },
+  { text: "[w#1]     POST /login.php · sqli probe ' or 1=1 --  → 200 (no diff)", tone: "dim" },
+  { text: "[w#2]     GET /api/v1/export?file=../../etc/passwd → 403", tone: "dim" },
+  { text: "[guard]   BLOCK destructive payload: DROP TABLE users", tone: "warn" },
+  { text: "[w#3]     directory brute 1,842 paths · 12 hits", tone: "dim" },
+  { text: "[w#3]     /backup/ 200 · 4.1MB zip", tone: "dim" },
+  { text: "[w#1]     login.php error-based → 500 (stack trace leaked)", tone: "dim" },
+  { text: "[finding] #12 path traversal (blocked) severity=info", tone: "dim" },
+  { text: "[llm]     round=2 in=18,442 out=1,203 cached=12,288 $0.031", tone: "dim" },
+  { text: "[w#2]     ssh banner 10.20.0.12 · kex diffie-hellman-group14-sha1", tone: "dim" },
+  { text: "[finding] #13 openssh 8.2 weak kex severity=low", tone: "dim" },
+  { text: "[planner] round 3 · coverage=0.87 · converging", tone: "dim" },
+  { text: "[w#1]     /backup/db_2026.zip → 200 · 4.1MB · extracting index", tone: "dim" },
+  { text: "[w#1]     archive contains 3 .sql files (schema, users, orders)", tone: "dim" },
+  { text: "[finding] #14 exposed backup archive severity=high", tone: "warn" },
+  { text: "[notify]  feishu → 3 findings pushed 412ms", tone: "ok" },
+  { text: "[w#3]     10.20.0.77 /admin/login.php · weak password policy", tone: "dim" },
+  { text: "[w#2]     internal dns resolver 10.20.0.2 · 78 PTR records", tone: "dim" },
+  { text: "[scope]   78/78 in-scope · expanding allowed", tone: "dim" },
+  { text: "[planner] round 4 · intents=11 · depth=3", tone: "dim" },
+  { text: "[w#1]     10.20.0.140  redis:6379  no-auth  INFO server", tone: "dim" },
+  { text: "[finding] #15 redis unauthenticated severity=critical", tone: "warn" },
+  { text: "[w#2]     10.20.0.141  mysql:3306  handshake · 5.7.44", tone: "dim" },
+  { text: "[w#3]     10.20.0.152  k8s api:6443  anonymous-auth=false", tone: "dim" },
+  { text: "[w#1]     redis DBSIZE → 1,204,331 keys", tone: "dim" },
+  { text: "[guard]   BLOCK FLUSHALL (destructive)", tone: "warn" },
+  { text: "[llm]     round=4 in=22,190 out=1,884 cached=16,384 $0.041", tone: "dim" },
+  { text: "[w#2]     10.20.0.160  jenkins:8080  [403]  anonymous denied", tone: "dim" },
+  { text: "[w#3]     10.20.0.160  /script  → 403", tone: "dim" },
+  { text: "[w#1]     credential replay 41/41 hosts · 0 success", tone: "dim" },
+  { text: "[w#2]     tls scan · 12 hosts · 4 weak ciphers", tone: "dim" },
+  { text: "[finding] #16 rc4 cipher suites severity=low", tone: "dim" },
+  { text: "[planner] round 5 · coverage=0.94", tone: "dim" },
+  { text: "[w#3]     10.20.0.31 /console  → 200 · spring boot actuator", tone: "dim" },
+  { text: "[w#1]     /actuator/env → 200 · 42 properties", tone: "dim" },
+  { text: "[finding] #17 actuator env exposure severity=high", tone: "warn" },
+  { text: "[guard]   out-of-scope host 203.0.113.9 skipped (external)", tone: "warn" },
+  { text: "[notify]  feishu → 5 findings pushed 388ms", tone: "ok" },
+  { text: "[report]  generating · 41 assets · 6 facts · 5 findings", tone: "dim" },
+  { text: "[report]  export → data/report-20261109.html (214kB)", tone: "ok" },
+  { text: "[w#1]     session transcript archived (1,204 messages)", tone: "dim" },
+  { text: "[llm]     total in=61,022 out=5,411 cached=44,032 $0.114", tone: "dim" },
+  { text: "[engine]  task PAUSED by operator", tone: "warn" },
+  { text: "[ok]      state persisted · workers idle", tone: "ok" },
+  { text: "", tone: "dim" },
+  { text: "$ catty status", tone: "cmd" },
+  { text: "[engine]  tasks=1 running=0 paused=1 workers=3", tone: "dim" },
+  { text: "[traffic] recorded=18,442 requests · proxy 127.0.0.1:8788", tone: "dim" },
+  { text: "[notify]  pending=0 failed=0", tone: "dim" },
+  { text: "[guard]   policy=strict · destructive blocked=2 · scope rejected=2", tone: "dim" },
+  { text: "$ catty scope show", tone: "cmd" },
+  { text: "[scope]   allow 10.20.0.0/24 · deny 0.0.0.0/0 · mode=explicit", tone: "dim" },
+  { text: "[scope]   external assets require operator confirmation", tone: "warn" },
+  { text: "$ catty findings list --severity critical", tone: "cmd" },
+  { text: "[finding] #15 redis unauthenticated · 10.20.0.140:6379", tone: "warn" },
+  { text: "[ok]      awaiting next authorized scope", tone: "ok" },
 ];
 
 export default function LoginPage() {
@@ -72,6 +125,14 @@ export default function LoginPage() {
   const [readToEnd, setReadToEnd] = useState(false);
   // 每次打开弹窗重置的确认倒计时
   const [countdown, setCountdown] = useState(TERMS_COUNTDOWN_SECONDS);
+  // 终端日志的基准时间与逐行时间偏移：每次循环回到开头时重新取当前时间，
+  // 保证显示的始终是"刚刚发生"的时间，而不是写死的假时间戳。
+  const [termEpoch, setTermEpoch] = useState(() => Date.now());
+  const termOffsets = useMemo(() => {
+    let acc = 0;
+    return TERMINAL_LINES.map(() => (acc += 60 + Math.random() * 900));
+  }, []);
+  const termStart = termEpoch - termOffsets[termOffsets.length - 1];
   useEffect(() => {
     if (!termsOpen) return;
     setCountdown(TERMS_COUNTDOWN_SECONDS);
@@ -92,6 +153,7 @@ export default function LoginPage() {
     let timer = 0;
     const step = () => {
       line = (line + 1) % total; // 走满一份后回到 0：两份内容相同，跳回无痕
+      if (line === 0) setTermEpoch(Date.now()); // 新一轮日志以"当前时间"起算
       el.style.transform = `translateY(-${(line * 100) / (total * 2)}%)`;
       // 18% 概率连发（90–210ms），其余 260–1160ms，节奏不均匀才像真终端
       const burst = Math.random() < 0.18;
@@ -100,7 +162,9 @@ export default function LoginPage() {
     };
     timer = window.setTimeout(step, 700);
     return () => window.clearTimeout(timer);
-  }, []);
+    // 依赖 checking：登录态检查期间组件提前 return，终端节点尚未挂载，
+    // 空依赖的话 effect 只跑一次、ref 为 null，动画就永远不启动了。
+  }, [checking]);
 
   // 滚动到条款底部（含无需滚动即可完整展示的情况）方可点击「同意」。
   function handleTermsScroll() {
@@ -215,7 +279,9 @@ export default function LoginPage() {
                           : "text-white/20"
                   }
                 >
-                  {line.text}
+                  {line.tone === "cmd" || line.text === ""
+                    ? line.text
+                    : `${fmtClock(termStart + termOffsets[i])}  ${line.text}`}
                 </div>
               ))}
             </div>
