@@ -108,11 +108,18 @@ export function ConfigField({
     return (
       <Input
         id={id}
+        name={`notify-${def.key}`}
         className={def.kind === "text" ? "font-mono" : ""}
         type={inputType(def.kind)}
         placeholder={def.placeholder}
         value={masked ? "" : raw}
         onChange={(e) => onChange(e.target.value)}
+        // Webhook / 密钥都是 URL 或密钥字符串，不是账号密码。
+        // 不声明的话浏览器会把它们当成登录表单回填，覆盖掉已填内容。
+        autoComplete={def.kind === "password" ? "new-password" : "off"}
+        autoCapitalize="none"
+        autoCorrect="off"
+        spellCheck={false}
       />
     );
   }
