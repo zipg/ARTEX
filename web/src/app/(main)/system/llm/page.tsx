@@ -329,7 +329,7 @@ function ProfileSheet({
   const [keyHint, setKeyHint] = React.useState("");
   const [rps, setRps] = React.useState("0");
   const [rpm, setRpm] = React.useState("0");
-  const [cw, setCw] = React.useState("0"); // 上下文窗口(K tokens);0=默认200K
+  const [cw, setCw] = React.useState("256"); // 上下文窗口(K tokens);默认 256K
   const [thinkingType, setThinkingType] = React.useState(NONE);
   const [effort, setEffort] = React.useState(NONE);
   const [priority, setPriority] = React.useState("0"); // 轮询顺位;越大越先
@@ -362,7 +362,7 @@ function ProfileSheet({
     setProxy(profile?.proxy ?? "");
     setRps(String(profile?.rate_per_second ?? 0));
     setRpm(String(profile?.rate_per_minute ?? 0));
-    setCw(String(profile?.context_window_k ?? 0));
+    setCw(String(profile?.context_window_k ?? 256));
     setThinkingType(fromStore(profile?.thinking_type));
     setEffort(fromStore(profile?.reasoning_effort));
     setPriority(String(profile?.priority ?? 0));
