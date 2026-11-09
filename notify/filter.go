@@ -76,7 +76,9 @@ func Match(f Filter, s Snapshot) bool {
 	if s.Kind == EventFindingStatusChanged && !f.OnStatusChange {
 		return false
 	}
-	if !AtLeast(s.Severity, f.MinSeverity) {
+	// 任务生命周期事件没有漏洞级别，不参与级别过滤——否则配了「只看高危」的渠道
+	// 会连"任务已开始/已暂停/已完成"都收不到。
+	if s.Kind != "task_status" && !AtLeast(s.Severity, f.MinSeverity) {
 		return false
 	}
 	if len(f.TaskIDs) > 0 && !slices.Contains(f.TaskIDs, s.TaskID) {

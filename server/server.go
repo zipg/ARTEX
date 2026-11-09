@@ -1539,6 +1539,10 @@ func (s *Server) createTask(w http.ResponseWriter, r *http.Request) {
 	// 共享的建后流程(seed + 种子意图 + 后台目标分解 + engine.Run),与 spawn_task 复用同一段。
 	// launchTask 内部异步,不阻塞 UI —— 目标分解在后台可见地进行。
 	s.launchTask(t, req.Description+" "+req.Goal, req.SeedFirstIntent != nil && *req.SeedFirstIntent)
+	// 任务开始即推送（飞书），便于值班同事第一时间知道有人在跑测试
+	if tid, convErr := strconv.ParseInt(t.ID, 10, 64); convErr == nil {
+		go s.m.NotifyTaskEvent(tid, t.Name, "created", "running", req.Description)
+	}
 	writeJSON(w, 201, taskDTO(t, s.resolvedTaskStatus(t)))
 }
 

@@ -74,6 +74,23 @@ func StatusLabel(status string) string {
 		return "已修复"
 	case "false_positive":
 		return "误报"
+	// 任务生命周期（kind=task_status）
+	case "created":
+		return "已创建"
+	case "queued":
+		return "排队中"
+	case "running":
+		return "执行中"
+	case "paused":
+		return "已暂停"
+	case "done":
+		return "已完成"
+	case "failed":
+		return "执行失败"
+	case "stopped":
+		return "已停止"
+	case "cancelled":
+		return "已取消"
 	case "ignored":
 		return "忽略"
 	case "duplicate":

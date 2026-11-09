@@ -1,6 +1,7 @@
 package server
 
 import (
+	"context"
 	"database/sql"
 	"encoding/json"
 	"errors"
@@ -15,6 +16,7 @@ import (
 	"time"
 
 	"github.com/Autumn-27/artex/agent"
+	"github.com/Autumn-27/artex/notify"
 	pgdb "github.com/Autumn-27/artex/db"
 	"github.com/Autumn-27/artex/enrich"
 	"github.com/Autumn-27/artex/guard"
@@ -1405,6 +1407,26 @@ func (m *Manager) SetTaskStatusGuarded(id, status string) (won bool, err error) 
 
 // SetTaskStatus persists a task's lifecycle status (e.g. "done") and reflects it
 // on the in-memory handle so the derived DTO status shows it without a reload.
+
+// NotifyTaskEvent 写入一条任务生命周期通知事件（finding_id=0，快照里带任务名与状态迁移）。
+// 复用漏洞事件的表与投递引擎：渲染侧按 snapshot.kind 区分呈现方式。
+func (m *Manager) NotifyTaskEvent(taskID int64, name, from, to, summary string) {
+	if m == nil || m.pg == nil {
+		return
+	}
+	snap := notify.Snapshot{
+		Kind:       "task_status",
+		TaskID:     taskID,
+		Name:       name,
+		FromStatus: from,
+		ToStatus:   to,
+		Summary:    summary,
+	}
+	if _, err := m.pg.AddNotificationEvent(context.Background(), "task_status", 0, snap); err != nil {
+		log.Printf("[notify] 任务事件写入失败 task=%d: %v", taskID, err)
+	}
+}
+
 func (m *Manager) SetTaskStatus(id, status string) error {
 	m.taskStateMu.Lock()
 	defer m.taskStateMu.Unlock()
@@ -1412,6 +1434,14 @@ func (m *Manager) SetTaskStatus(id, status string) error {
 	if err != nil {
 		return err
 	}
+	// 记录变更前的状态与名称，用于任务完成时推送
+	prevStatus, prevName := "", ""
+	m.mu.RLock()
+	if t := m.tasks[id]; t != nil {
+		snap := t.lifecycleSnapshot()
+		prevStatus, prevName = snap.Status, snap.Name
+	}
+	m.mu.RUnlock()
 	if err := m.pg.SetStatus(n, status); err != nil {
 		return err
 	}
@@ -1431,6 +1461,10 @@ func (m *Manager) SetTaskStatus(id, status string) error {
 		})
 	}
 	m.mu.Unlock()
+	// 进入终态才推送，避免 running/queued 的频繁写入刷屏
+	if pgdb.IsTerminal(status) && prevStatus != status {
+		go m.NotifyTaskEvent(n, prevName, prevStatus, status, "")
+	}
 	return nil
 }
 

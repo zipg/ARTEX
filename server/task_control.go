@@ -1,6 +1,7 @@
 package server
 
 import (
+	"strconv"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -146,6 +147,14 @@ func (s *Server) applyTaskControlWithCause(t *Task, action string, pauseCause er
 		return out, fmt.Errorf("action must be pause|resume")
 	}
 	log.Printf("[task] #%s %s", t.ID, map[string]string{"pause": "已暂停", "resume": "已继续"}[action])
+	// 暂停/继续也推送一条，避免"任务被谁停了"没人知道
+	if tid, convErr := strconv.ParseInt(t.ID, 10, 64); convErr == nil {
+		from, to := "running", "paused"
+		if action == "resume" {
+			from, to = "paused", "running"
+		}
+		go s.m.NotifyTaskEvent(tid, t.Name, from, to, "")
+	}
 	return out, nil
 }
 

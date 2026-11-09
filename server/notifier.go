@@ -424,6 +424,22 @@ func (n *Notifier) renderBatch(ctx context.Context, deliveries []*db.Notificatio
 
 // itemFor 把事件快照渲染成待推送条目，顺带解析资产名与详情回链。
 func (n *Notifier) itemFor(ctx context.Context, snap notify.Snapshot, baseURL string) (notify.Item, error) {
+	// 任务生命周期事件：没有漏洞字段，标题用任务名，级别位用一个中性标记，
+	// 让各渠道沿用同一套模板而不必为任务单独写渲染。
+	if snap.Kind == "task_status" {
+		item := notify.Item{
+			Name:       snap.Name,
+			VulnClass:  "任务状态",
+			Severity:   "📋 任务",
+			Summary:    snap.Summary,
+			FromStatus: snap.FromStatus,
+			ToStatus:   snap.ToStatus,
+		}
+		if baseURL != "" {
+			item.DetailURL = fmt.Sprintf("%s/function/tasks/detail?id=%d", baseURL, snap.TaskID)
+		}
+		return item, nil
+	}
 	assets, err := n.pg.NotificationAssetNames(ctx, snap.AssetIDs)
 	if err != nil {
 		// 资产名解析失败不该阻止推送：读不到名字比收不到通知轻得多，
