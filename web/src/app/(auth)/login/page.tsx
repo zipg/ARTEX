@@ -87,32 +87,55 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="flex h-dvh">
-      {/* Left panel */}
-      <div className="hidden flex-col items-center justify-center bg-primary p-12 text-center lg:flex lg:w-1/3">
-        <div className="relative flex items-center justify-center">
-          <div className="absolute size-80 rounded-full border border-primary-foreground/10" />
-          <div className="absolute size-60 rounded-full border border-primary-foreground/15" />
-          <div className="absolute size-40 rounded-full border border-primary-foreground/20" />
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/logo.png" alt="Catty" width={160} height={160} className="relative" />
-        </div>
-      </div>
+    <div className="dark relative flex min-h-dvh items-center justify-center overflow-hidden bg-[#0a0c10] px-4 py-12">
+      {/* 背景：网格 */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0 opacity-[0.06]"
+        style={{
+          backgroundImage:
+            "linear-gradient(to right, #ffffff 1px, transparent 1px), linear-gradient(to bottom, #ffffff 1px, transparent 1px)",
+          backgroundSize: "44px 44px",
+        }}
+      />
+      {/* 背景：橙色光晕 */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute -top-48 left-1/2 size-[720px] -translate-x-1/2 rounded-full bg-[#ff6a00]/20 blur-[130px]"
+      />
+      {/* 背景：假终端（纯装饰，不可选中/不可点击） */}
+      <pre
+        aria-hidden
+        className="pointer-events-none absolute inset-x-0 bottom-0 hidden select-none overflow-hidden p-8 font-mono text-[11px] leading-relaxed text-white/[0.07] lg:block"
+      >
+{`$ catty --init
+[ok] postgres 127.0.0.1:5432 connected
+[ok] llm profile resolved · catty-default
+[..] scheduler idle — waiting for an authorized scope
+$ catty plan --scope 10.0.0.0/24 --confirm
+[!] out-of-scope asset detected → human confirmation required
+$ catty findings --severity critical
+  0 pending — no task running`}
+      </pre>
 
-      {/* Right panel */}
-      <div className="flex w-full items-center justify-center bg-background p-8 lg:w-2/3">
-        <div className="w-full max-w-md space-y-10 py-24 lg:py-32">
-          <div className="space-y-4 text-center">
-            <h2 className="text-2xl font-medium tracking-tight">登录</h2>
-            <p className="mx-auto max-w-xl text-muted-foreground">欢迎回来，请输入密码以继续使用 Catty</p>
+      <div className="relative w-full max-w-sm">
+        <div className="rounded-2xl border border-white/10 bg-white/[0.035] p-8 shadow-[0_8px_60px_-12px_rgba(0,0,0,0.8)] backdrop-blur-sm">
+          <div className="mb-7 flex flex-col items-center gap-3 text-center">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/logo.png" alt="Catty" width={88} height={88} className="size-22 drop-shadow-[0_6px_20px_rgba(255,106,0,0.35)]" />
+            <div className="space-y-1">
+              <h2 className="text-lg font-semibold tracking-tight text-white">登录 Catty</h2>
+              <p className="text-xs text-white/45">自主渗透测试控制台 · 七猫内部使用</p>
+            </div>
           </div>
+
           <form onSubmit={handleSubmit} className="flex flex-col gap-4">
             <div className="space-y-1.5">
-              <Label htmlFor="username">用户名</Label>
-              <Input id="username" value="Catty" readOnly className="bg-muted text-muted-foreground" />
+              <Label htmlFor="username" className="text-white/70">用户名</Label>
+              <Input id="username" value="Catty" readOnly className="border-white/10 bg-white/[0.04] text-white/60" />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="password">密码</Label>
+              <Label htmlFor="password" className="text-white/70">密码</Label>
               <Input
                 id="password"
                 type="password"
@@ -121,6 +144,7 @@ export default function LoginPage() {
                 placeholder="请输入密码"
                 autoFocus
                 autoComplete="current-password"
+                className="border-white/10 bg-white/[0.04] text-white placeholder:text-white/25"
               />
             </div>
             <div className="flex items-start gap-2">
@@ -128,14 +152,14 @@ export default function LoginPage() {
                 id="agree-terms"
                 checked={agreed}
                 onCheckedChange={(v) => setAgreed(v === true)}
-                className="mt-0.5"
+                className="mt-0.5 border-white/25"
               />
-              <Label htmlFor="agree-terms" className="text-sm font-normal leading-relaxed text-muted-foreground">
+              <Label htmlFor="agree-terms" className="text-sm font-normal leading-relaxed text-white/50">
                 我已阅读并同意
                 <button
                   type="button"
                   onClick={() => setTermsOpen(true)}
-                  className="mx-0.5 font-medium text-primary underline-offset-4 hover:underline"
+                  className="mx-0.5 font-medium text-[#ff8a3d] underline-offset-4 hover:underline"
                 >
                   《使用须知》
                 </button>
@@ -147,10 +171,24 @@ export default function LoginPage() {
             </Button>
           </form>
         </div>
+        <p className="mt-5 text-center font-mono text-[11px] text-white/25">
+          catty · 仅限授权范围内的安全测试
+        </p>
       </div>
 
-      <Dialog open={termsOpen} onOpenChange={setTermsOpen}>
-        <DialogContent className="gap-0 p-0 sm:max-w-4xl">
+      {/* 免责声明：强制阅读——不可关闭（无 X、点遮罩无反应、Esc 无效），只能滚动到底后点「同意」 */}
+      <Dialog
+        open={termsOpen}
+        onOpenChange={(open) => {
+          if (open) setTermsOpen(true); // 任何关闭请求一律忽略
+        }}
+      >
+        <DialogContent
+          showCloseButton={false}
+          onInteractOutside={(e) => e.preventDefault()}
+          onEscapeKeyDown={(e) => e.preventDefault()}
+          className="gap-0 p-0 sm:max-w-4xl"
+        >
           <DialogHeader className="flex-row items-center gap-3 border-b px-6 py-4">
             <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
               <ShieldCheck className="size-5" />
