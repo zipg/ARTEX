@@ -603,10 +603,16 @@ function ProfileSheet({
             <Label htmlFor="p-session-header">自定义会话头（可选）</Label>
             <Input
               id="p-session-header"
+              name="catty-session-header-key"
               className="font-mono"
               placeholder="如 x-session-id（留空=不发送）"
               value={sessionHeaderKey}
               onChange={(e) => setSessionHeaderKey(e.target.value)}
+              // 防止浏览器/密码管理器把这里当成账号输入框自动填充登录凭据
+              autoComplete="off"
+              autoCorrect="off"
+              autoCapitalize="none"
+              spellCheck={false}
             />
             <p className="text-muted-foreground text-xs">
               填写头名后，每次请求都会带上这个 HTTP 头，头值自动填为 <b>当前会话的 session id</b>（chat 会话如
@@ -620,7 +626,11 @@ function ProfileSheet({
             <Input
               id="p-api-key"
               ref={apiKeyRef}
+              name="catty-llm-api-key"
               type="password"
+              // new-password：告诉浏览器这是"新密码"，不要套用已保存的登录账号密码
+              autoComplete="new-password"
+              spellCheck={false}
               placeholder={keyHint ? `已设置（${keyHint}），留空保持不变` : "sk-…"}
               value={apiKey}
               onChange={(e) => setApiKey(e.target.value)}
