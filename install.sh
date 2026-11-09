@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# ARTEX 安装脚本：① 全部 Docker  ② 本地编译运行
+# Catty 安装脚本：① 全部 Docker  ② 本地编译运行
 set -euo pipefail
 cd "$(cd "$(dirname "$0")" && pwd)"
 
@@ -111,7 +111,7 @@ JSON
 }
 
 echo "=============================="
-echo "  ARTEX 安装"
+echo "  Catty 安装"
 echo "  1) 全部 Docker 安装"
 echo "  2) 本地运行（go 编译）"
 echo "=============================="
