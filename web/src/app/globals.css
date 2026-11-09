@@ -283,17 +283,7 @@ html {
   }
 }
 
-/* 登录页装饰终端：内容整体上移 50%，配合两份相同内容实现无缝循环 */
-@keyframes catty-term-scroll {
-  from { transform: translateY(0); }
-  to   { transform: translateY(-50%); }
-}
+/* 登录页装饰终端：位移由组件内的 JS 按随机间隔驱动（见 login/page.tsx） */
 .catty-term-scroll {
-  /* 时长与步进由组件内联指定（按日志行数计算），这里只负责绑定关键帧与循环 */
-  animation-name: catty-term-scroll;
-  animation-iteration-count: infinite;
   will-change: transform;
-}
-@media (prefers-reduced-motion: reduce) {
-  .catty-term-scroll { animation: none; }
 }

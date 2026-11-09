@@ -80,6 +80,28 @@ export default function LoginPage() {
   }, [termsOpen]);
   const termsBodyRef = useRef<HTMLDivElement>(null);
 
+  // 登录页背景终端：按随机间隔逐行上移，模拟真实日志"突发到达"的节奏。
+  // 不用 CSS steps()：它的时间间隔是恒定的，看起来像机械动画。
+  const termRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const el = termRef.current;
+    if (!el) return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const total = TERMINAL_LINES.length; // 单份日志的行数
+    let line = 0;
+    let timer = 0;
+    const step = () => {
+      line = (line + 1) % total; // 走满一份后回到 0：两份内容相同，跳回无痕
+      el.style.transform = `translateY(-${(line * 100) / (total * 2)}%)`;
+      // 18% 概率连发（90–210ms），其余 260–1160ms，节奏不均匀才像真终端
+      const burst = Math.random() < 0.18;
+      const delay = burst ? 90 + Math.random() * 120 : 260 + Math.random() * 900;
+      timer = window.setTimeout(step, delay);
+    };
+    timer = window.setTimeout(step, 700);
+    return () => window.clearTimeout(timer);
+  }, []);
+
   // 滚动到条款底部（含无需滚动即可完整展示的情况）方可点击「同意」。
   function handleTermsScroll() {
     const el = termsBodyRef.current;
@@ -174,12 +196,10 @@ export default function LoginPage() {
           WebkitMaskImage: "linear-gradient(to bottom, transparent, black 12%, black 88%, transparent)",
         }}
       >
-        <div className="catty-term-scroll px-8 py-6 font-mono text-[11.5px] leading-[2.05]"
-          style={{
-            // 每行 0.45s，逐行跳一格 —— steps() 让它"往上顶"而不是匀速滑动
-            animationDuration: `${(TERMINAL_LINES.length * 0.45).toFixed(1)}s`,
-            animationTimingFunction: `steps(${TERMINAL_LINES.length}, end)`,
-          }}>
+        <div
+          ref={termRef}
+          className="catty-term-scroll px-8 py-6 font-mono text-[11.5px] leading-[2.05] transition-transform duration-100 ease-out"
+        >
           {[0, 1].map((copy) => (
             <div key={copy}>
               {TERMINAL_LINES.map((line, i) => (
