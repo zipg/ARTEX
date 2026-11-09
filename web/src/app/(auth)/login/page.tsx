@@ -8,11 +8,14 @@ import { AlertTriangle, ShieldCheck } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Dialog, DialogClose, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { api } from "@/lib/api";
 import { auth } from "@/lib/auth";
+
+// 同意按钮的最短阅读时间（秒）
+const TERMS_COUNTDOWN_SECONDS = 5;
 
 export default function LoginPage() {
   const router = useRouter();
@@ -23,6 +26,14 @@ export default function LoginPage() {
   const [agreed, setAgreed] = useState(false);
   const [termsOpen, setTermsOpen] = useState(true); // 品牌化：登录页自动弹出免责声明
   const [readToEnd, setReadToEnd] = useState(false);
+  // 每次打开弹窗重置的确认倒计时
+  const [countdown, setCountdown] = useState(TERMS_COUNTDOWN_SECONDS);
+  useEffect(() => {
+    if (!termsOpen) return;
+    setCountdown(TERMS_COUNTDOWN_SECONDS);
+    const timer = setInterval(() => setCountdown((c) => (c > 0 ? c - 1 : 0)), 1000);
+    return () => clearInterval(timer);
+  }, [termsOpen]);
   const termsBodyRef = useRef<HTMLDivElement>(null);
 
   // 滚动到条款底部（含无需滚动即可完整展示的情况）方可点击「同意」。
@@ -36,8 +47,15 @@ export default function LoginPage() {
     if (!termsOpen) return;
     // 打开时重置，并处理内容本就不足一屏、无法触发滚动的场景。
     setReadToEnd(false);
-    const el = termsBodyRef.current;
-    if (el && el.scrollHeight <= el.clientHeight + 8) setReadToEnd(true);
+    const check = () => {
+      const el = termsBodyRef.current;
+      if (el && el.scrollHeight <= el.clientHeight + 8) setReadToEnd(true);
+    };
+    check();
+    // 刚挂载时布局可能未稳定（ref 为空或高度为 0），延迟再判定一次，
+    // 否则「条款不足一屏」的用户会永远等不到按钮解禁。
+    const timer = setTimeout(check, 300);
+    return () => clearTimeout(timer);
   }, [termsOpen]);
 
   useEffect(() => {
@@ -330,20 +348,24 @@ $ catty findings --severity critical
 
           <DialogFooter className="mx-0 mb-0 flex-col items-stretch gap-2 rounded-b-xl px-6 sm:flex-row sm:items-center sm:justify-between">
             <p className="text-xs text-muted-foreground">
-              {readToEnd ? "您已浏览全部条款" : "请将条款滚动至底部后再确认"}
+              {countdown > 0
+                ? `请阅读上述条款，${countdown} 秒后方可确认`
+                : readToEnd
+                  ? "您已浏览全部条款"
+                  : "请将条款滚动至底部后再确认"}
             </p>
-            <DialogClose asChild>
-              <Button
-                type="button"
-                disabled={!readToEnd}
-                onClick={() => {
-                  setAgreed(true);
-                  setError("");
-                }}
-              >
-                我已阅读并同意全部条款
-              </Button>
-            </DialogClose>
+            <Button
+              type="button"
+              disabled={!readToEnd || countdown > 0}
+              onClick={() => {
+                setAgreed(true);
+                setError("");
+                // 显式关闭：onOpenChange 只接受「打开」，此处是唯一出口
+                setTermsOpen(false);
+              }}
+            >
+              {countdown > 0 ? `同意（${countdown}s）` : "我已阅读并同意全部条款"}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
