@@ -31,6 +31,9 @@ function isFullBleed(pathname: string) {
   return normalized.startsWith("/function/tasks/");
 }
 
+// 品牌化（Catty）：隐藏版本与更新徽标（同时不再自动请求 GitHub releases）
+const SHOW_UPDATE_BADGE = false;
+
 export function MainContent({ children }: { children: ReactNode }) {
   const currentUser = useCurrentUser();
   const pathname = usePathname();
@@ -68,7 +71,7 @@ export function MainContent({ children }: { children: ReactNode }) {
             {version && (
               <span className="font-medium text-muted-foreground text-xs tabular-nums">版本 · {version}</span>
             )}
-            <UpdateBadge />
+            {SHOW_UPDATE_BADGE && <UpdateBadge />}
             <LayoutControls />
             <ThemeSwitcher />
             <AccountSwitcher users={[currentUser]} />

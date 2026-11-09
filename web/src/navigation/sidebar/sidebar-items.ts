@@ -61,6 +61,10 @@ export interface NavGroup {
   items: NavMainItem[];
 }
 
+// 品牌化（Catty）：内部部署隐藏以下入口。
+// 只隐藏导航，不删除页面与后端接口——直接访问 URL 仍可用，便于排查问题。
+const HIDDEN_IDS = new Set(["traffic", "llm-records", "sync"]);
+
 export const sidebarItems: NavGroup[] = [
   {
     id: 1,
@@ -76,7 +80,7 @@ export const sidebarItems: NavGroup[] = [
       { id: "assets", title: "资产", url: "/function/assets", icon: Network },
       { id: "sync", title: "资产同步", url: "/function/sync", icon: FolderSync },
       { id: "workspace", title: "工作空间", url: "/function/workspace", icon: FolderOpen },
-    ],
+    ].filter((it) => !HIDDEN_IDS.has(it.id)),
   },
   {
     id: 2,
@@ -93,6 +97,6 @@ export const sidebarItems: NavGroup[] = [
       { id: "approvals", title: "审批记录", url: "/system/intercept/approvals", icon: ClipboardList },
       { id: "logs", title: "日志", url: "/system/logs", icon: ScrollText },
       { id: "settings", title: "系统配置", url: "/system/settings", icon: Settings2 },
-    ],
+    ].filter((it) => !HIDDEN_IDS.has(it.id)),
   },
 ];

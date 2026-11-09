@@ -17,6 +17,11 @@ import type { Settings } from "@/lib/types";
 
 import { UpdateCard } from "./_components/update-card";
 
+// 品牌化（Catty）：内部部署隐藏「版本与更新」与「流量捕获」入口。
+// 置为 true 可恢复，后端能力与接口均保留。
+const SHOW_UPDATE_CARD = false;
+const SHOW_TRAFFIC_CAPTURE = false;
+
 export default function SystemSettingsPage() {
   const [trafficCapture, setTrafficCapture] = React.useState(false);
   const [agentTrafficBinding, setAgentTrafficBinding] = React.useState(false);
@@ -266,9 +271,10 @@ export default function SystemSettingsPage() {
           多列则自动按内容高度平衡填充。卡片间距靠 mb 而非 gap——多列布局下
           column-gap 只管列间距，行间距要由子元素自己给。 */}
       <div className="columns-1 gap-4 md:gap-6 lg:columns-2">
-        <UpdateCard />
+        {SHOW_UPDATE_CARD && <UpdateCard />}
 
-        <Card className="mb-4 break-inside-avoid md:mb-6">
+        {SHOW_TRAFFIC_CAPTURE && (
+          <Card className="mb-4 break-inside-avoid md:mb-6">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-base">
               <RadioTowerIcon className="size-4" />
@@ -294,6 +300,7 @@ export default function SystemSettingsPage() {
             />
           </CardContent>
         </Card>
+        )}
 
         <Card className="mb-4 break-inside-avoid md:mb-6">
           <CardHeader>
