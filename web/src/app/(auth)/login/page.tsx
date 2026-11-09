@@ -17,6 +17,36 @@ import { auth } from "@/lib/auth";
 // 同意按钮的最短阅读时间（秒）
 const TERMS_COUNTDOWN_SECONDS = 5;
 
+// 登录页背景装饰用的"假终端"内容。纯展示：不含真实目标，全部为示意数据。
+const TERMINAL_LINES: { text: string; tone?: "dim" | "cmd" | "ok" | "warn" }[] = [
+  { text: "$ catty --init", tone: "cmd" },
+  { text: "[ok] postgres 127.0.0.1:5432 connected", tone: "ok" },
+  { text: "[ok] jwt key loaded (7d ttl)", tone: "ok" },
+  { text: "[ok] llm profile resolved · catty-default", tone: "ok" },
+  { text: "[..] scheduler idle — waiting for an authorized scope", tone: "dim" },
+  { text: "$ catty task new --name demo --scope 10.0.0.0/24", tone: "cmd" },
+  { text: "[ok] feishu notifier verified", tone: "ok" },
+  { text: "[ok] scope locked: 254 hosts", tone: "ok" },
+  { text: "$ catty plan --confirm", tone: "cmd" },
+  { text: "  planner · round 1 · intents=6", tone: "dim" },
+  { text: "  worker[1] 10.0.0.12:22   ssh banner grab", tone: "dim" },
+  { text: "  worker[2] 10.0.0.31:443  tls + endpoint map", tone: "dim" },
+  { text: "  worker[3] 10.0.0.77:8080 admin panel probe", tone: "dim" },
+  { text: "[!] out-of-scope asset detected → human confirmation required", tone: "warn" },
+  { text: "    candidate: 203.0.113.9 (external) — skipped", tone: "warn" },
+  { text: "[ok] intent 6/6 done · assets=41 facts=12", tone: "ok" },
+  { text: "$ catty findings --severity critical", tone: "cmd" },
+  { text: "  #12  10.0.0.77   CVE-2021-44228  log4j  critical", tone: "dim" },
+  { text: "  #13  10.0.0.31   weak tls (rc4)  medium", tone: "dim" },
+  { text: "[ok] report exported → data/report.html", tone: "ok" },
+  { text: "$ catty notify test --channel feishu", tone: "cmd" },
+  { text: "[ok] pushed to feishu in 412ms", tone: "ok" },
+  { text: "$ catty status", tone: "cmd" },
+  { text: "  tasks=1 running=0 paused=1 workers=3", tone: "dim" },
+  { text: "  traffic=recorded  proxy=127.0.0.1:8788", tone: "dim" },
+  { text: "[..] awaiting operator — unauthorized testing is prohibited", tone: "warn" },
+];
+
 export default function LoginPage() {
   const router = useRouter();
   const [password, setPassword] = useState("");
@@ -121,20 +151,38 @@ export default function LoginPage() {
         aria-hidden
         className="pointer-events-none absolute -top-48 left-1/2 size-[720px] -translate-x-1/2 rounded-full bg-[#ff6a00]/20 blur-[130px]"
       />
-      {/* 背景：假终端（纯装饰，不可选中/不可点击） */}
-      <pre
+      {/* 背景：滚动终端（纯装饰，不可选中/不可点击） */}
+      <div
         aria-hidden
-        className="pointer-events-none absolute inset-x-0 bottom-0 hidden select-none overflow-hidden p-8 font-mono text-[11px] leading-relaxed text-white/[0.07] lg:block"
+        className="pointer-events-none absolute inset-y-0 left-0 hidden w-[46%] select-none overflow-hidden border-r border-white/[0.06] xl:block"
+        style={{
+          maskImage: "linear-gradient(to bottom, transparent, black 12%, black 88%, transparent)",
+          WebkitMaskImage: "linear-gradient(to bottom, transparent, black 12%, black 88%, transparent)",
+        }}
       >
-{`$ catty --init
-[ok] postgres 127.0.0.1:5432 connected
-[ok] llm profile resolved · catty-default
-[..] scheduler idle — waiting for an authorized scope
-$ catty plan --scope 10.0.0.0/24 --confirm
-[!] out-of-scope asset detected → human confirmation required
-$ catty findings --severity critical
-  0 pending — no task running`}
-      </pre>
+        <div className="catty-term-scroll px-8 py-6 font-mono text-[11.5px] leading-[2.05]">
+          {[0, 1].map((copy) => (
+            <div key={copy}>
+              {TERMINAL_LINES.map((line, i) => (
+                <div
+                  key={`${copy}-${i}`}
+                  className={
+                    line.tone === "cmd"
+                      ? "text-white/45"
+                      : line.tone === "ok"
+                        ? "text-emerald-400/35"
+                        : line.tone === "warn"
+                          ? "text-[#ff9a4d]/60"
+                          : "text-white/20"
+                  }
+                >
+                  {line.text}
+                </div>
+              ))}
+            </div>
+          ))}
+        </div>
+      </div>
 
       <div className="relative w-full max-w-sm">
         <div className="rounded-2xl border border-white/10 bg-white/[0.035] p-8 shadow-[0_8px_60px_-12px_rgba(0,0,0,0.8)] backdrop-blur-sm">

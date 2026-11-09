@@ -282,3 +282,15 @@ html {
     -webkit-print-color-adjust: exact;
   }
 }
+
+/* 登录页装饰终端：内容整体上移 50%，配合两份相同内容实现无缝循环 */
+@keyframes catty-term-scroll {
+  from { transform: translateY(0); }
+  to   { transform: translateY(-50%); }
+}
+.catty-term-scroll {
+  animation: catty-term-scroll 46s linear infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .catty-term-scroll { animation: none; }
+}
