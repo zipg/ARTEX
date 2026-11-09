@@ -21,7 +21,7 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [checking, setChecking] = useState(true);
   const [agreed, setAgreed] = useState(false);
-  const [termsOpen, setTermsOpen] = useState(false);
+  const [termsOpen, setTermsOpen] = useState(true); // 品牌化：登录页自动弹出免责声明
   const [readToEnd, setReadToEnd] = useState(false);
   const termsBodyRef = useRef<HTMLDivElement>(null);
 
@@ -95,7 +95,7 @@ export default function LoginPage() {
           <div className="absolute size-60 rounded-full border border-primary-foreground/15" />
           <div className="absolute size-40 rounded-full border border-primary-foreground/20" />
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/logo.png" alt="Catty" width={160} height={160} className="relative brightness-0 invert" />
+          <img src="/logo.png" alt="Catty" width={160} height={160} className="relative" />
         </div>
       </div>
 
@@ -150,7 +150,7 @@ export default function LoginPage() {
       </div>
 
       <Dialog open={termsOpen} onOpenChange={setTermsOpen}>
-        <DialogContent className="gap-0 p-0 sm:max-w-2xl">
+        <DialogContent className="gap-0 p-0 sm:max-w-4xl">
           <DialogHeader className="flex-row items-center gap-3 border-b px-6 py-4">
             <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
               <ShieldCheck className="size-5" />
@@ -177,12 +177,38 @@ export default function LoginPage() {
               </span>
             </p>
 
+            <section className="space-y-2">
+              <h4 className="flex items-center gap-2 font-medium text-destructive">
+                <span className="flex size-5 items-center justify-center rounded-md bg-destructive/10 text-xs font-semibold text-destructive">
+                  1
+                </span>
+                <AlertTriangle className="size-4" />
+                第一条 · 七猫网络安全红线
+              </h4>
+              <div className="ml-7 rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-foreground">
+                <p className="font-medium">请遵守七猫文化传媒公司网络安全规定：</p>
+                <ul className="mt-1 list-disc space-y-1 pl-5 marker:text-destructive/70">
+                  <li>严禁进行任何未经对方授权的测试！</li>
+                  <li>严禁对测试目标执行破坏性操作！</li>
+                  <li>严禁盲目扩大未知测试范围！</li>
+                </ul>
+              </div>
+              <ul className="ml-7 list-decimal space-y-1.5 rounded-lg border border-destructive/20 bg-destructive/5 p-3 pl-8 text-foreground/80 marker:text-destructive/70">
+                <li>
+                  严禁对任何网站、线上服务、他人或第三方所有的联网系统发起扫描、探测、利用或攻击（无论是否已获得授权、是否为您自有资产）；
+                </li>
+                <li>严禁将本软件用于任何实际的渗透测试、攻防对抗、红蓝演练或生产环境；</li>
+                <li>严禁将本软件用于非法入侵、数据窃取、勒索、拒绝服务（DoS/DDoS）或任何破坏性、犯罪性活动；</li>
+                                <li>严禁从事任何违反您所在国家或地区法律、法规及监管规定的行为。</li>
+              </ul>
+            </section>
+
             <section className="space-y-1.5">
               <h4 className="flex items-center gap-2 font-medium text-foreground">
                 <span className="flex size-5 items-center justify-center rounded-md bg-muted text-xs font-semibold text-muted-foreground">
-                  1
+                  2
                 </span>
-                第一条 · 定义与开源许可
+                第二条 · 定义与开源许可
               </h4>
               <p className="pl-7">
                 本软件（Catty）是一款基于 GNU Affero General Public License
@@ -194,32 +220,13 @@ export default function LoginPage() {
             <section className="space-y-1.5">
               <h4 className="flex items-center gap-2 font-medium text-foreground">
                 <span className="flex size-5 items-center justify-center rounded-md bg-muted text-xs font-semibold text-muted-foreground">
-                  2
+                  3
                 </span>
-                第二条 · 授权使用范围
+                第三条 · 授权使用范围
               </h4>
               <p className="pl-7">
                 本软件仅供个人学习、代码研究、安全技术原理探讨，以及在您自行搭建的本地隔离环境中进行技术验证之用，适用于学习、学术研究、代码审阅等非攻击性、非破坏性用途。除本条明确许可的情形外，您不得将本软件用于任何其他目的。
               </p>
-            </section>
-
-            <section className="space-y-2">
-              <h4 className="flex items-center gap-2 font-medium text-destructive">
-                <span className="flex size-5 items-center justify-center rounded-md bg-destructive/10 text-xs font-semibold text-destructive">
-                  3
-                </span>
-                <AlertTriangle className="size-4" />
-                第三条 · 禁止行为
-              </h4>
-              <ul className="ml-7 list-decimal space-y-1.5 rounded-lg border border-destructive/20 bg-destructive/5 p-3 pl-8 text-foreground/80 marker:text-destructive/70">
-                <li>
-                  严禁对任何网站、线上服务、他人或第三方所有的联网系统发起扫描、探测、利用或攻击（无论是否已获得授权、是否为您自有资产）；
-                </li>
-                <li>严禁将本软件用于任何实际的渗透测试、攻防对抗、红蓝演练或生产环境；</li>
-                <li>严禁将本软件用于非法入侵、数据窃取、勒索、拒绝服务（DoS/DDoS）或任何破坏性、犯罪性活动；</li>
-                <li>严禁移除、篡改或规避本软件及其输出中的任何版权、许可或安全提示信息；</li>
-                <li>严禁从事任何违反您所在国家或地区法律、法规及监管规定的行为。</li>
-              </ul>
             </section>
 
             <section className="space-y-1.5">
