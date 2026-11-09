@@ -289,7 +289,10 @@ html {
   to   { transform: translateY(-50%); }
 }
 .catty-term-scroll {
-  animation: catty-term-scroll 46s linear infinite;
+  /* 时长与步进由组件内联指定（按日志行数计算），这里只负责绑定关键帧与循环 */
+  animation-name: catty-term-scroll;
+  animation-iteration-count: infinite;
+  will-change: transform;
 }
 @media (prefers-reduced-motion: reduce) {
   .catty-term-scroll { animation: none; }

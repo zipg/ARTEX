@@ -19,32 +19,46 @@ const TERMS_COUNTDOWN_SECONDS = 5;
 
 // 登录页背景装饰用的"假终端"内容。纯展示：不含真实目标，全部为示意数据。
 const TERMINAL_LINES: { text: string; tone?: "dim" | "cmd" | "ok" | "warn" }[] = [
+  { text: "$ catty version", tone: "cmd" },
+  { text: "catty 0.4.5-catty · darwin/arm64 · go1.26.4 · build 2026-11-09T06:12Z", tone: "dim" },
   { text: "$ catty --init", tone: "cmd" },
-  { text: "[ok] postgres 127.0.0.1:5432 connected", tone: "ok" },
-  { text: "[ok] jwt key loaded (7d ttl)", tone: "ok" },
-  { text: "[ok] llm profile resolved · catty-default", tone: "ok" },
-  { text: "[..] scheduler idle — waiting for an authorized scope", tone: "dim" },
-  { text: "$ catty task new --name demo --scope 10.0.0.0/24", tone: "cmd" },
-  { text: "[ok] feishu notifier verified", tone: "ok" },
-  { text: "[ok] scope locked: 254 hosts", tone: "ok" },
-  { text: "$ catty plan --confirm", tone: "cmd" },
-  { text: "  planner · round 1 · intents=6", tone: "dim" },
-  { text: "  worker[1] 10.0.0.12:22   ssh banner grab", tone: "dim" },
-  { text: "  worker[2] 10.0.0.31:443  tls + endpoint map", tone: "dim" },
-  { text: "  worker[3] 10.0.0.77:8080 admin panel probe", tone: "dim" },
-  { text: "[!] out-of-scope asset detected → human confirmation required", tone: "warn" },
-  { text: "    candidate: 203.0.113.9 (external) — skipped", tone: "warn" },
-  { text: "[ok] intent 6/6 done · assets=41 facts=12", tone: "ok" },
-  { text: "$ catty findings --severity critical", tone: "cmd" },
-  { text: "  #12  10.0.0.77   CVE-2021-44228  log4j  critical", tone: "dim" },
-  { text: "  #13  10.0.0.31   weak tls (rc4)  medium", tone: "dim" },
-  { text: "[ok] report exported → data/report.html", tone: "ok" },
-  { text: "$ catty notify test --channel feishu", tone: "cmd" },
-  { text: "[ok] pushed to feishu in 412ms", tone: "ok" },
-  { text: "$ catty status", tone: "cmd" },
-  { text: "  tasks=1 running=0 paused=1 workers=3", tone: "dim" },
-  { text: "  traffic=recorded  proxy=127.0.0.1:8788", tone: "dim" },
-  { text: "[..] awaiting operator — unauthorized testing is prohibited", tone: "warn" },
+  { text: "[06:12:41.482] [config]  loaded ~/.catty/config.json (db, skill_dir, notify)", tone: "dim" },
+  { text: "[06:12:41.489] [pg]      pool ready min=2 max=13  postgres://catty@127.0.0.1:5432/artex", tone: "dim" },
+  { text: "[06:12:41.501] [migrate] schema up-to-date · 51 tables · rev=20261109_04", tone: "dim" },
+  { text: "[06:12:41.512] [auth]    jwt key loaded (HS256, ttl=168h, kid=5f2c)", tone: "dim" },
+  { text: "[06:12:41.520] [llm]     profile \"catty-default\" · openai-compatible · ctx=256k", tone: "dim" },
+  { text: "[06:12:41.534] [notify]  feishu webhook verified in 412ms", tone: "ok" },
+  { text: "[06:12:41.540] [traffic] recording proxy 127.0.0.1:8788 · ca=data/traffic/_ca/pki", tone: "dim" },
+  { text: "[06:12:41.551] [engine]  workers=3 planner=1 scheduler=depth-first", tone: "dim" },
+  { text: "[06:12:41.560] [ok]      listening on 127.0.0.1:8787", tone: "ok" },
+  { text: "", tone: "dim" },
+  { text: "$ catty task new --name q3-web --scope 10.20.0.0/24 --goal \"obtain root\"", tone: "cmd" },
+  { text: "[06:13:02.114] [scope]   254 hosts · 0 exclusions · policy=strict", tone: "dim" },
+  { text: "[06:13:02.121] [guard]   out-of-scope confirmation: REQUIRED", tone: "warn" },
+  { text: "[06:13:03.902] [planner] round 1 · budget 24 intents · depth 1", tone: "dim" },
+  { text: "[06:13:04.001] [w#1]      intent 1  tcp-syn 10.20.0.0/24:22,80,443,8080", tone: "dim" },
+  { text: "[06:13:04.010] [w#2]      intent 2  passive subdomain enum (crt.sh, otx, chaos)", tone: "dim" },
+  { text: "[06:13:04.020] [w#3]      intent 3  http fingerprint · 41 live hosts", tone: "dim" },
+  { text: "[06:13:09.771] [masscan] 41/41 up · 68 open ports · 3.9s · pps=1200", tone: "dim" },
+  { text: "[06:13:11.203] [httpx]   10.20.0.31   nginx/1.24.0  [200] 1.2kB  title=\"Intranet\"", tone: "dim" },
+  { text: "[06:13:11.884] [httpx]   10.20.0.77   nginx/1.18.0  [401] 0.6kB  title=\"Admin\"", tone: "dim" },
+  { text: "[06:13:12.041] [w#1]      intent 1 done · facts=3 assets=41", tone: "ok" },
+  { text: "[06:13:30.512] [w#2]      crt.sh → 6 subs (2 internal-only)", tone: "dim" },
+  { text: "[06:13:31.008] [scope]    REJECT legacy.partner-cdn.example — not in allowlist", tone: "warn" },
+  { text: "[06:13:33.220] [w#3]      intent 3 done · tech: nginx, php/8.1, jquery/1.12", tone: "ok" },
+  { text: "[06:13:34.010] [planner] round 2 · intents=9 · depth=2", tone: "dim" },
+  { text: "[06:13:35.441] [w#1]      10.20.0.77 /admin → 302 /login.php  set-cookie=PHPSESSID", tone: "dim" },
+  { text: "[06:13:36.902] [w#1]      login.php  error-based probe → 500 (stack trace leaked)", tone: "dim" },
+  { text: "[06:13:38.114] [guard]    BLOCK destructive payload: DROP TABLE users", tone: "warn" },
+  { text: "[06:13:39.005] [w#2]      /api/v1/export?file=../../etc/passwd → 403 (filtered)", tone: "dim" },
+  { text: "[06:13:40.221] [finding]  #12 path traversal (blocked) severity=info", tone: "dim" },
+  { text: "[06:13:44.512] [llm]      round=2 in=18,442 out=1,203 cached=12,288 cost=$0.031", tone: "dim" },
+  { text: "[06:13:47.001] [w#3]      ssh banner 10.20.0.12  OpenSSH_8.2p1 Ubuntu-4ubuntu0.5", tone: "dim" },
+  { text: "[06:13:48.772] [finding]  #13 openssh 8.2 weak kex severity=low", tone: "dim" },
+  { text: "[06:14:01.004] [notify]   feishu → 2 findings pushed (412ms)", tone: "ok" },
+  { text: "[06:14:02.118] [planner]  round 3 · coverage=0.87 · converging", tone: "dim" },
+  { text: "[06:14:10.900] [engine]   task PAUSED by operator", tone: "warn" },
+  { text: "[06:14:10.901] [ok]       state persisted · 41 assets · 6 facts · 2 findings", tone: "ok" },
 ];
 
 export default function LoginPage() {
@@ -160,7 +174,12 @@ export default function LoginPage() {
           WebkitMaskImage: "linear-gradient(to bottom, transparent, black 12%, black 88%, transparent)",
         }}
       >
-        <div className="catty-term-scroll px-8 py-6 font-mono text-[11.5px] leading-[2.05]">
+        <div className="catty-term-scroll px-8 py-6 font-mono text-[11.5px] leading-[2.05]"
+          style={{
+            // 每行 0.45s，逐行跳一格 —— steps() 让它"往上顶"而不是匀速滑动
+            animationDuration: `${(TERMINAL_LINES.length * 0.45).toFixed(1)}s`,
+            animationTimingFunction: `steps(${TERMINAL_LINES.length}, end)`,
+          }}>
           {[0, 1].map((copy) => (
             <div key={copy}>
               {TERMINAL_LINES.map((line, i) => (
