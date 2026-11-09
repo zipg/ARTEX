@@ -293,7 +293,7 @@ export default function LoginPage() {
         <div className="rounded-2xl border border-white/10 bg-white/[0.035] p-8 shadow-[0_8px_60px_-12px_rgba(0,0,0,0.8)] backdrop-blur-sm">
           <div className="mb-7 flex flex-col items-center gap-3 text-center">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/logo.png" alt="Catty" width={88} height={88} className="size-22 drop-shadow-[0_6px_20px_rgba(255,106,0,0.35)]" />
+            <img src="/logo-blink.gif" alt="Catty" width={88} height={88} className="size-22 drop-shadow-[0_6px_20px_rgba(255,106,0,0.35)]" />
             <div className="space-y-1">
               <h2 className="text-lg font-semibold tracking-tight text-white">登录 Catty</h2>
               <p className="text-xs text-white/45">自主渗透测试控制台 · 七猫内部使用</p>
