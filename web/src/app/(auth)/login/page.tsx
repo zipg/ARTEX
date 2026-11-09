@@ -186,21 +186,15 @@ export default function LoginPage() {
                 第一条 · 七猫网络安全红线
               </h4>
               <div className="ml-7 rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-foreground">
-                <p className="font-medium">请遵守七猫文化传媒公司网络安全规定：</p>
+                <p className="font-medium">
+                  请遵守《中华人民共和国网络安全法》及七猫文化传媒公司安全规定：
+                </p>
                 <ul className="mt-1 list-disc space-y-1 pl-5 marker:text-destructive/70">
-                  <li>严禁进行任何未经对方授权的测试！</li>
-                  <li>严禁对测试目标执行破坏性操作！</li>
-                  <li>严禁盲目扩大未知测试范围！</li>
+                  <li>严禁对公司和互联网上任何资产，进行任何形式的未授权测试！</li>
+                  <li>严禁对测试目标执行破坏性操作，无论测试/生产环境！</li>
+                  <li>严禁测试期间无人值守，盲目扩大未知测试范围！</li>
                 </ul>
               </div>
-              <ul className="ml-7 list-decimal space-y-1.5 rounded-lg border border-destructive/20 bg-destructive/5 p-3 pl-8 text-foreground/80 marker:text-destructive/70">
-                <li>
-                  严禁对任何网站、线上服务、他人或第三方所有的联网系统发起扫描、探测、利用或攻击（无论是否已获得授权、是否为您自有资产）；
-                </li>
-                <li>严禁将本软件用于任何实际的渗透测试、攻防对抗、红蓝演练或生产环境；</li>
-                <li>严禁将本软件用于非法入侵、数据窃取、勒索、拒绝服务（DoS/DDoS）或任何破坏性、犯罪性活动；</li>
-                                <li>严禁从事任何违反您所在国家或地区法律、法规及监管规定的行为。</li>
-              </ul>
             </section>
 
             <section className="space-y-1.5">
