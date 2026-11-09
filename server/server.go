@@ -1465,6 +1465,14 @@ func (s *Server) createTask(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, 400, "bad json: "+err.Error())
 		return
 	}
+	// 品牌化（Catty）：未配置并启用飞书推送时拒绝开测，防止个人静默测试造成资产损失。
+	if ok, err := s.hasEnabledFeishuChannel(r.Context()); err != nil {
+		writeErr(w, 500, "通知渠道读取失败: "+err.Error())
+		return
+	} else if !ok {
+		writeErr(w, 400, errFeishuRequired)
+		return
+	}
 	if strings.TrimSpace(req.Description) == "" {
 		req.Description = "未命名任务"
 	}

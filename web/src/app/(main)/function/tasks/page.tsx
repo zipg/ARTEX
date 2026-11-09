@@ -2362,6 +2362,15 @@ function BulkDeleteTasksDialog({
   );
 }
 
+// 品牌化（Catty）默认值与强制约束。
+//
+// DEFAULT_GOAL：新建任务时目标框的预填内容。
+// DESCRIPTION_SUFFIX：描述框尾部强制追加的范围约束，提交时拼接到描述末尾，
+// 用于约束 Agent 只在目标机范围内测试，遇到外部资产必须先确认，避免盲目扩大范围。
+const DEFAULT_GOAL = "获取该目标部署的各种服务的访问权限，获取机器root或ssh权限";
+const DESCRIPTION_SUFFIX =
+  "目标机器上的所有服务均可作为渗透范围，但扫描到外部机器或资产时先与我确认再继续，严禁盲目扩大渗透目标范围。";
+
 // CreateTaskSheet is the 新建任务 drawer. Its form state lives HERE, not in TasksPage: with
 // 描述/目标 held by the page component every keystroke re-rendered the whole task table
 // behind the drawer (plus its sticky column and 20 AlertDialog trees), which showed up as
@@ -3075,7 +3084,7 @@ function CreateTaskSheet({
   const [name, setName] = React.useState("");
   const [categoryID, setCategoryID] = React.useState<number | undefined>(undefined);
   const [description, setDescription] = React.useState("");
-  const [goal, setGoal] = React.useState("");
+  const [goal, setGoal] = React.useState(DEFAULT_GOAL);
   const [selectedTemplateID, setSelectedTemplateID] = React.useState<number | null>(null);
   const [profiles, setProfiles] = React.useState<LLMProfile[]>([]);
   const [companies, setCompanies] = React.useState<Company[]>([]);
@@ -3138,6 +3147,28 @@ function CreateTaskSheet({
       toast.error(`最多关联 ${MAX_SOURCE_TASKS} 个来源任务`);
       return;
     }
+    // 强制：必须已配置并启用飞书推送，才允许开测（防止个人静默测试造成资产损失）。
+    try {
+      const channels = await api.notifyChannels();
+      const feishuReady = channels.some(
+        (c) =>
+          c.kind === "feishu" &&
+          c.enabled !== false &&
+          String((c.config as Record<string, unknown> | null)?.webhook ?? "").trim() !== "",
+      );
+      if (!feishuReady) {
+        toast.error("请先在「系统设置 → 通知推送」配置并启用飞书机器人 Webhook，再开始测试");
+        return;
+      }
+    } catch {
+      toast.error("通知渠道校验失败，请稍后重试");
+      return;
+    }
+    // 描述尾部强制追加范围约束，避免 Agent 越界扫描。
+    const baseDesc = description.trim();
+    const finalDescription = baseDesc.endsWith(DESCRIPTION_SUFFIX)
+      ? baseDesc
+      : `${baseDesc}\n\n${DESCRIPTION_SUFFIX}`;
     setCreating(true);
     try {
       const timeoutSec = Math.max(0, Math.floor(Number(timeoutMin) || 0)) * 60;
@@ -3145,7 +3176,7 @@ function CreateTaskSheet({
       await api.createTask({
         name: name.trim(),
         categoryId: categoryID,
-        description: description.trim(),
+        description: finalDescription,
         goal: goal.trim(),
         llmProfileIds: llmProfileIDs.map(Number),
         sourceTaskIds: sourceTaskIDs,
@@ -3162,7 +3193,7 @@ function CreateTaskSheet({
       setName("");
       setCategoryID(undefined);
       setDescription("");
-      setGoal("");
+      setGoal(DEFAULT_GOAL);
       setSelectedTemplateID(null);
       setSourceTaskIDs([]);
       setCompanyIDs([]);

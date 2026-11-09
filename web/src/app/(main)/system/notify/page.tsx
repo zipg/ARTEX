@@ -32,6 +32,12 @@ import { ConfigField, FilterSummary } from "./_components/channel-form";
 import { DeliveryList } from "./_components/delivery-list";
 import { formatBacklog, StatTile } from "./_components/stat-tile";
 
+// 品牌化（Catty）：内部只启用飞书推送。
+//
+// 其它渠道（钉钉/企微/Webhook/Telegram/邮件）的实现与后端能力保留，但页面不再
+// 展示、也不允许新建——避免渠道分散导致告警没人看见。日后要放开，改这一个数组即可。
+const ALLOWED_KINDS = ["feishu"];
+
 // 本页只负责编排：加载数据、维护表单状态、调用接口。
 // 字段定义与解析在 _components/channel-fields.ts，控件与过滤摘要在
 // _components/channel-form.tsx，投递记录在 _components/delivery-list.tsx——
@@ -64,7 +70,7 @@ export default function NotifyPage() {
     // 用户会以为配置丢了，比直接报错更让人慌。
     api
       .notifyChannels()
-      .then(setChannels)
+      .then((list) => setChannels(list.filter((c) => ALLOWED_KINDS.includes(c.kind))))
       .catch((e) => toast.error("读取渠道列表失败：" + (e as Error).message));
   }, []);
   React.useEffect(() => {
@@ -80,7 +86,7 @@ export default function NotifyPage() {
 
   function openAdd() {
     setEditing(null);
-    setForm(emptyForm(meta?.kinds[0]?.kind ?? "dingtalk"));
+    setForm(emptyForm(ALLOWED_KINDS[0]));
     setOpen(true);
   }
 
@@ -437,7 +443,7 @@ export default function NotifyPage() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    {(meta?.kinds ?? []).map((k) => (
+                    {(meta?.kinds ?? []).filter((k) => ALLOWED_KINDS.includes(k.kind)).map((k) => (
                       <SelectItem key={k.kind} value={k.kind}>
                         {KIND_LABEL[k.kind] ?? k.kind}
                       </SelectItem>
