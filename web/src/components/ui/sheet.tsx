@@ -45,34 +45,37 @@ function SheetOverlay({
   )
 }
 
+// popupOpenAtPointerDown 记录"按下鼠标那一刻"是否有下拉/气泡处于展开状态。
+// 为什么要在 window 的捕获阶段取：Radix 的 DismissableLayer 监听在 document 上，
+// 等它把事件派发到 Sheet 时，下拉已经关闭、aria-expanded 已复位，
+// 那时再查 DOM 永远是"没有浮层"。window 捕获先于 document 捕获，能拿到点击前的真实状态。
+let popupOpenAtPointerDown = false
+
+function snapshotPopupState() {
+  if (typeof document === "undefined") return
+  popupOpenAtPointerDown =
+    !!document.querySelector('[aria-expanded="true"]') ||
+    !!document.querySelector('[data-slot="select-content"]') ||
+    !!document.querySelector('[data-radix-popper-content-wrapper]')
+}
+
 function SheetContent({
   className,
   children,
   side = "right",
   showCloseButton = true,
-  dismissOnOutsideClick = false,
   onInteractOutside,
   onPointerDownOutside,
   ...props
 }: React.ComponentProps<typeof SheetPrimitive.Content> & {
   side?: "top" | "right" | "bottom" | "left"
   showCloseButton?: boolean
-  /** 是否允许「点击遮罩/外部」关闭。默认 false：表单抽屉误触关闭的代价太大。 */
-  dismissOnOutsideClick?: boolean
 }) {
-  // 表单抽屉一律不响应「外部点击关闭」。
-  //
-  // 试过两种启发式都不成立：
-  //   1) 检测 DOM 里有没有打开的浮层 —— Select 是 modal 的，展开时 body 被设
-  //      pointer-events:none，同一次 pointerdown 已把 Select 关掉，查不到浮层；
-  //   2) 判断点击目标是不是遮罩 —— 同上，target 会变成 <html>，不是遮罩。
-  // 结论：外部点击这条路径在 modal 浮层下无法可靠区分「误触」与「有意关闭」，
-  // 而误触的代价是整张表单内容丢失。因此直接不提供这条路径：
-  //   关闭抽屉只能用右上角 X 或 Esc（两者都是明确意图）。
-  // 个别确实需要「点遮罩关闭」的抽屉，可传 dismissOnOutsideClick。
-  const blockOutside = (e: Event) => {
-    e.preventDefault()
-  }
+  React.useEffect(() => {
+    // 捕获阶段、且在 window 上：保证比 Radix 的 document 监听更早执行
+    window.addEventListener("pointerdown", snapshotPopupState, true)
+    return () => window.removeEventListener("pointerdown", snapshotPopupState, true)
+  }, [])
 
   return (
     <SheetPortal>
@@ -85,11 +88,12 @@ function SheetContent({
           className
         )}
         onInteractOutside={(e) => {
-          if (!dismissOnOutsideClick) blockOutside(e)
+          // 按下时若有浮层展开，这一下只用于收起浮层，不关抽屉
+          if (popupOpenAtPointerDown) e.preventDefault()
           onInteractOutside?.(e)
         }}
         onPointerDownOutside={(e) => {
-          if (!dismissOnOutsideClick) blockOutside(e)
+          if (popupOpenAtPointerDown) e.preventDefault()
           onPointerDownOutside?.(e)
         }}
         {...props}
