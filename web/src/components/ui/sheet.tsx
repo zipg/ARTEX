@@ -50,23 +50,28 @@ function SheetContent({
   children,
   side = "right",
   showCloseButton = true,
+  dismissOnOutsideClick = false,
   onInteractOutside,
   onPointerDownOutside,
   ...props
 }: React.ComponentProps<typeof SheetPrimitive.Content> & {
   side?: "top" | "right" | "bottom" | "left"
   showCloseButton?: boolean
+  /** 是否允许「点击遮罩/外部」关闭。默认 false：表单抽屉误触关闭的代价太大。 */
+  dismissOnOutsideClick?: boolean
 }) {
-  // 只有「点击遮罩」才允许关闭抽屉，其余外部交互一律吞掉。
+  // 表单抽屉一律不响应「外部点击关闭」。
   //
-  // 为什么不用「检测有没有浮层打开」：Select 是 modal 的，展开时 body 被设为
-  // pointer-events:none，此时点击的 target 会变成 <html>；而这一次 pointerdown
-  // 同时也把 Select 关掉了，DOM 里已经查不到浮层内容——按 DOM 判断必然漏。
-  // 改为看事件目标：落在遮罩上才关，其它（含下拉展开期间的误触）都不关。
-  const isOverlayClick = (e: Event) => {
-    const detail = (e as CustomEvent<{ originalEvent?: Event }>).detail
-    const target = detail?.originalEvent?.target as HTMLElement | null
-    return !!target && typeof target.getAttribute === "function" && target.getAttribute("data-slot") === "sheet-overlay"
+  // 试过两种启发式都不成立：
+  //   1) 检测 DOM 里有没有打开的浮层 —— Select 是 modal 的，展开时 body 被设
+  //      pointer-events:none，同一次 pointerdown 已把 Select 关掉，查不到浮层；
+  //   2) 判断点击目标是不是遮罩 —— 同上，target 会变成 <html>，不是遮罩。
+  // 结论：外部点击这条路径在 modal 浮层下无法可靠区分「误触」与「有意关闭」，
+  // 而误触的代价是整张表单内容丢失。因此直接不提供这条路径：
+  //   关闭抽屉只能用右上角 X 或 Esc（两者都是明确意图）。
+  // 个别确实需要「点遮罩关闭」的抽屉，可传 dismissOnOutsideClick。
+  const blockOutside = (e: Event) => {
+    e.preventDefault()
   }
 
   return (
@@ -80,11 +85,11 @@ function SheetContent({
           className
         )}
         onInteractOutside={(e) => {
-          if (!isOverlayClick(e)) e.preventDefault()
+          if (!dismissOnOutsideClick) blockOutside(e)
           onInteractOutside?.(e)
         }}
         onPointerDownOutside={(e) => {
-          if (!isOverlayClick(e)) e.preventDefault()
+          if (!dismissOnOutsideClick) blockOutside(e)
           onPointerDownOutside?.(e)
         }}
         {...props}
