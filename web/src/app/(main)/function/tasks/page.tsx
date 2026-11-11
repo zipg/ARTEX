@@ -2369,7 +2369,7 @@ function BulkDeleteTasksDialog({
 // 用于约束 Agent 只在目标机范围内测试，遇到外部资产必须先确认，避免盲目扩大范围。
 const DEFAULT_GOAL = "获取该目标部署的各种服务的访问权限，获取机器root或ssh权限";
 const DESCRIPTION_SUFFIX =
-  "目标机器上的所有服务均可作为渗透范围，但扫描到外部机器或资产时先与我确认再继续，严禁盲目扩大渗透目标范围。";
+  "目标主机（指被测的远程资产，不包含运行本系统的这台机器）上的所有服务均可作为渗透范围，但扫描到目标之外的机器或资产时先与我确认再继续，严禁盲目扩大渗透目标范围。";
 
 // CreateTaskSheet is the 新建任务 drawer. Its form state lives HERE, not in TasksPage: with
 // 描述/目标 held by the page component every keystroke re-rendered the whole task table
