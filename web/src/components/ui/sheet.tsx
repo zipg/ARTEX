@@ -57,25 +57,16 @@ function SheetContent({
   side?: "top" | "right" | "bottom" | "left"
   showCloseButton?: boolean
 }) {
-  // 表单抽屉里常有下拉/气泡（Radix popper，内容 portal 到 body）。
-  // 此时点击表单其它区域，会先关闭浮层，同时被 Sheet 判定为"点击遮罩"，
-  // 整个抽屉连同已填内容一起被关掉。检测到浮层正开着时吞掉这次外部交互。
-  const guardPopper = (e: Event) => {
-    if (typeof document === "undefined") return
-    // 覆盖所有浮层类型：Select 默认 item-aligned 渲染，不一定有 popper wrapper，
-    // 所以按 data-slot 逐个匹配。
-    const OPEN_POPPER = [
-      "[data-radix-popper-content-wrapper]",
-      '[data-slot="select-content"]',
-      '[data-slot="dropdown-menu-content"]',
-      '[data-slot="popover-content"]',
-      '[data-slot="context-menu-content"]',
-      '[data-slot="combobox-content"]',
-      '[role="listbox"]',
-    ].join(",")
-    if (document.querySelector(OPEN_POPPER)) {
-      e.preventDefault()
-    }
+  // 只有「点击遮罩」才允许关闭抽屉，其余外部交互一律吞掉。
+  //
+  // 为什么不用「检测有没有浮层打开」：Select 是 modal 的，展开时 body 被设为
+  // pointer-events:none，此时点击的 target 会变成 <html>；而这一次 pointerdown
+  // 同时也把 Select 关掉了，DOM 里已经查不到浮层内容——按 DOM 判断必然漏。
+  // 改为看事件目标：落在遮罩上才关，其它（含下拉展开期间的误触）都不关。
+  const isOverlayClick = (e: Event) => {
+    const detail = (e as CustomEvent<{ originalEvent?: Event }>).detail
+    const target = detail?.originalEvent?.target as HTMLElement | null
+    return !!target && typeof target.getAttribute === "function" && target.getAttribute("data-slot") === "sheet-overlay"
   }
 
   return (
@@ -89,11 +80,11 @@ function SheetContent({
           className
         )}
         onInteractOutside={(e) => {
-          guardPopper(e)
+          if (!isOverlayClick(e)) e.preventDefault()
           onInteractOutside?.(e)
         }}
         onPointerDownOutside={(e) => {
-          guardPopper(e)
+          if (!isOverlayClick(e)) e.preventDefault()
           onPointerDownOutside?.(e)
         }}
         {...props}

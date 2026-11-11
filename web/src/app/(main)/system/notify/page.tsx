@@ -275,7 +275,7 @@ export default function NotifyPage() {
         <div>
           <h1 className="text-xl font-semibold tracking-tight">通知推送</h1>
           <p className="text-muted-foreground text-sm">
-            发现漏洞时推送到钉钉 / 飞书 / 企业微信等渠道 · 每个渠道可独立设推送时机与过滤规则
+            发现漏洞与任务状态变化时推送到飞书 · 可独立设置推送时机与过滤规则
           </p>
         </div>
         {meta && (
