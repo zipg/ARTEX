@@ -60,7 +60,7 @@ cd Catty
 ( cd web && npm ci && npm run build:static )
 
 # 拷入内嵌目录后编译单二进制（-tags embedui 才会把前端打进去）
-rm -rf server/webui/dist && cp -r web/out server/webui/dist
+rm -rf server/webui/dist && mkdir -p server/webui/dist && cp -R web/out/. server/webui/dist/
 CGO_ENABLED=0 go build -tags embedui -trimpath -o catty ./cmd/catty
 ```
 
@@ -108,7 +108,7 @@ docker compose -f docker-compose.safe.yml up -d
 ```bash
 git pull                                  # 拉最新代码
 ( cd web && npm ci && npm run build:static )
-rm -rf server/webui/dist && cp -r web/out server/webui/dist
+rm -rf server/webui/dist && mkdir -p server/webui/dist && cp -R web/out/. server/webui/dist/
 CGO_ENABLED=0 go build -tags embedui -trimpath -o catty ./cmd/catty
 ./cattyctl.sh stop && cp catty pkg/catty/ && ./cattyctl.sh start
 ```
