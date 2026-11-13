@@ -1457,6 +1457,11 @@ type createTaskReq struct {
 	CoverageEnabled      *bool    `json:"coverage_enabled,omitempty"`  // 资产覆盖度功能;省略/null=默认开(true)。false=关闭覆盖度计算/展示/自动累积范围+隐藏 add_task_scope/list_untested_assets。company 关联不受影响。
 	// InterceptRules 任务级资产拦截/允许规则(创建时录入,存 task_intercept_rules,不进全局表)。
 	InterceptRules []taskInterceptRuleReq `json:"intercept_rules,omitempty"`
+	// Stakeholders 是本次测试目标项目的干系人（开发/测试/运维）。
+	// 与 StakeholdersAck 一起构成"不许偷偷发起测试"的闸门：必须登记责任人，
+	// 并明确确认这些人已被拉进飞书预警群。
+	Stakeholders    string `json:"stakeholders"`
+	StakeholdersAck bool   `json:"stakeholders_ack"`
 }
 
 func (s *Server) createTask(w http.ResponseWriter, r *http.Request) {
@@ -1471,6 +1476,16 @@ func (s *Server) createTask(w http.ResponseWriter, r *http.Request) {
 		return
 	} else if !ok {
 		writeErr(w, 400, errFeishuRequired)
+		return
+	}
+	// 品牌化（Catty）：开测必须登记干系人并确认已拉群，避免个人静默测试。
+	req.Stakeholders = strings.TrimSpace(req.Stakeholders)
+	if req.Stakeholders == "" {
+		writeErr(w, 400, "请填写目标项目的开发/测试/运维责任人（飞书姓名或邮箱），并确认已将其拉入飞书预警群")
+		return
+	}
+	if !req.StakeholdersAck {
+		writeErr(w, 400, "请先确认：已把该项目的开发/测试/运维人员拉入飞书预警群，本次测试他们知悉")
 		return
 	}
 	if strings.TrimSpace(req.Description) == "" {
@@ -1522,6 +1537,7 @@ func (s *Server) createTask(w http.ResponseWriter, r *http.Request) {
 		TimeoutSeconds: req.TimeoutSeconds, PlanHeartbeatSeconds: req.PlanHeartbeatSeconds,
 		CoverageEnabled: req.CoverageEnabled,
 		InterceptRules:  interceptRules,
+		Stakeholders:    req.Stakeholders,
 	})
 	if err != nil {
 		if errors.Is(err, db.ErrTaskCategoryInvalid) || errors.Is(err, db.ErrTaskCategoryNotFound) {
@@ -1541,7 +1557,8 @@ func (s *Server) createTask(w http.ResponseWriter, r *http.Request) {
 	s.launchTask(t, req.Description+" "+req.Goal, req.SeedFirstIntent != nil && *req.SeedFirstIntent)
 	// 任务开始即推送（飞书），便于值班同事第一时间知道有人在跑测试
 	if tid, convErr := strconv.ParseInt(t.ID, 10, 64); convErr == nil {
-		go s.m.NotifyTaskEvent(tid, t.Name, "created", "running", req.Description)
+		go s.m.NotifyTaskEvent(tid, t.Name, "created", "running",
+			fmt.Sprintf("%s\n\n责任人：%s", req.Description, req.Stakeholders))
 	}
 	writeJSON(w, 201, taskDTO(t, s.resolvedTaskStatus(t)))
 }

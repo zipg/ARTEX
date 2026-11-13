@@ -252,6 +252,10 @@ export const api = {
     categoryId?: number;
     description: string;
     goal: string;
+    /** 开测前登记的目标项目干系人（开发/测试/运维） */
+    stakeholders: string;
+    /** 确认已将其拉入飞书预警群 */
+    stakeholdersAck: boolean;
     llmProfileIds?: number[];
     sourceTaskIds?: string[];
     companyIds?: number[];

@@ -3085,6 +3085,9 @@ function CreateTaskSheet({
   const [categoryID, setCategoryID] = React.useState<number | undefined>(undefined);
   const [description, setDescription] = React.useState("");
   const [goal, setGoal] = React.useState(DEFAULT_GOAL);
+  // 开测闸门：必须登记目标项目干系人并确认已拉群
+  const [stakeholders, setStakeholders] = React.useState("");
+  const [stakeholdersAck, setStakeholdersAck] = React.useState(false);
   const [selectedTemplateID, setSelectedTemplateID] = React.useState<number | null>(null);
   const [profiles, setProfiles] = React.useState<LLMProfile[]>([]);
   const [companies, setCompanies] = React.useState<Company[]>([]);
@@ -3143,6 +3146,14 @@ function CreateTaskSheet({
       toast.error("请填写描述与目标");
       return;
     }
+    if (!stakeholders.trim()) {
+      toast.error("请填写目标项目的开发/测试/运维责任人");
+      return;
+    }
+    if (!stakeholdersAck) {
+      toast.error("请确认已将这些责任人拉入飞书预警群");
+      return;
+    }
     if (sourceTaskIDs.length > MAX_SOURCE_TASKS) {
       toast.error(`最多关联 ${MAX_SOURCE_TASKS} 个来源任务`);
       return;
@@ -3178,6 +3189,8 @@ function CreateTaskSheet({
         categoryId: categoryID,
         description: finalDescription,
         goal: goal.trim(),
+        stakeholders: stakeholders.trim(),
+        stakeholdersAck: true,
         llmProfileIds: llmProfileIDs.map(Number),
         sourceTaskIds: sourceTaskIDs,
         companyIds: companyIDs,
@@ -3194,6 +3207,8 @@ function CreateTaskSheet({
       setCategoryID(undefined);
       setDescription("");
       setGoal(DEFAULT_GOAL);
+      setStakeholders("");
+      setStakeholdersAck(false);
       setSelectedTemplateID(null);
       setSourceTaskIDs([]);
       setCompanyIDs([]);
@@ -3315,6 +3330,35 @@ function CreateTaskSheet({
                 value={goal}
                 onChange={(e) => setGoal(e.target.value)}
               />
+            </div>
+            <div className="grid gap-3 rounded-lg border border-destructive/30 bg-destructive/5 p-3">
+              <div className="grid gap-2">
+                <Label htmlFor="stakeholders">目标项目责任人（开发 / 测试 / 运维）</Label>
+                <Input
+                  id="stakeholders"
+                  placeholder="例如：张三（后端）、李四（运维）、qa@qimao.com"
+                  value={stakeholders}
+                  onChange={(e) => setStakeholders(e.target.value)}
+                  autoComplete="off"
+                />
+              </div>
+              <div className="flex items-start gap-2">
+                <Checkbox
+                  id="stakeholders-ack"
+                  checked={stakeholdersAck}
+                  onCheckedChange={(v) => setStakeholdersAck(v === true)}
+                  className="mt-0.5"
+                />
+                <Label
+                  htmlFor="stakeholders-ack"
+                  className="text-xs font-normal leading-relaxed text-muted-foreground"
+                >
+                  已将以上人员拉入飞书预警群，本次测试的目标与范围他们已知悉
+                </Label>
+              </div>
+              <p className="text-muted-foreground text-xs">
+                未登记责任人并勾选确认时无法发起测试——服务端强制校验，避免个人静默测试。
+              </p>
             </div>
             <Field>
               <FieldLabel htmlFor="source-tasks">关联任务</FieldLabel>
