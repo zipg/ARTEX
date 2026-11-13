@@ -16,7 +16,7 @@
 > 目的是杜绝「个人静默测试」：每个任务都能追溯到知情人与通知链路。
 > 任务创建、暂停、继续、完成都会推送到飞书。
 >
-> 代码仓库：`https://codeup.aliyun.com/qimao/qaarm/comic-drama/Catty`
+> 代码仓库：`https://codeup.aliyun.com/qimao/qasafety/Catty`
 
 ---
 
@@ -53,7 +53,7 @@ psql -c "CREATE ROLE catty LOGIN PASSWORD '<密码>'"
 ### 2. 构建
 
 ```bash
-git clone https://codeup.aliyun.com/qimao/qaarm/comic-drama/Catty
+git clone https://codeup.aliyun.com/qimao/qasafety/Catty
 cd Catty
 
 # 前端静态产物
