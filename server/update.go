@@ -371,3 +371,12 @@ func (s *Server) updateStream(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 }
+
+// updateDisabled 是停用在线更新后的统一响应。
+//
+// 二开版本不接受「从上游 Release 下载并替换自身」的更新方式：那会把 Catty 的
+// 构建换回上游产物，也把供应链控制权交回上游。升级方式改为拉取本仓库最新源码
+// 重新编译，见 README「安装与升级」。
+func (s *Server) updateDisabled(w http.ResponseWriter, r *http.Request) {
+	writeErr(w, 410, "在线更新已停用：请拉取最新代码重新构建")
+}

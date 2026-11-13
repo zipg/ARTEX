@@ -46,6 +46,10 @@ Catty 基于 ARTEX（AGPL-3.0）二次开发，面向内部使用做了以下调
 
 ## 快速开始
 
+> **本仓库不提供一键安装脚本，也不提供在线更新。**
+> 首次部署与后续升级都按下面的步骤从源码构建；升级 = 拉取最新代码后重新编译替换二进制。
+
+
 ### 依赖
 
 - Go **1.26+**、Node **20+**、PostgreSQL **16/17**
@@ -108,6 +112,21 @@ docker compose -f docker-compose.safe.yml up -d
 | 操作约束注入 | 系统配置 | 默认开启，planner/worker 都会带上约束 |
 
 端口：`8787` 控制台与 API，`8788` 流量录制代理（仅回环）。
+
+### 升级
+
+仓库不提供在线更新（`/api/update/*` 返回 410）。升级流程：
+
+```bash
+git pull                                  # 拉最新代码
+( cd web && npm ci && npm run build:static )
+rm -rf server/webui/dist && cp -r web/out server/webui/dist
+CGO_ENABLED=0 go build -tags embedui -trimpath -o catty ./cmd/catty
+./cattyctl.sh stop && cp catty pkg/catty/ && ./cattyctl.sh start
+```
+
+数据（`data/`、PostgreSQL）与配置（`config.json`、`jwt.key`）不受影响；
+schema 在启动时自动迁移，无需手工执行 SQL。
 
 ---
 

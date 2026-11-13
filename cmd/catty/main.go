@@ -69,15 +69,10 @@ func run() int {
 	// page can show a live log stream. Do this first, to catch startup logs too.
 	server.StartLogCapture()
 
-	// Self-update bootstrap: swap in a staged binary, or count a post-swap boot
-	// attempt and roll back if the new build keeps dying. Must run before we open
-	// the stores or bind a port — this may end with "exit and let the start script
-	// relaunch me", and there is no point paying for either first.
-	action, upState := selfupdate.Bootstrap()
-	server.SetBootUpdateState(upState)
-	if action == selfupdate.Restart {
-		return selfupdate.ExitRestart
-	}
+	// 品牌化（Catty）：在线自更新已停用。
+	// 原逻辑会从上游 Release 下载二进制并替换自身（含冒烟测试与回滚）。
+	// 二开之后这条链路既会把构建换回上游产物，也等于把供应链控制权交回上游，
+	// 因此这里跳过换装引导：升级请拉取最新源码重新构建（见 README）。
 
 	// surface which config file the binary reads (absolute, so `go run`'s relative
 	// "config.json" — resolved against the CWD — is unambiguous).
